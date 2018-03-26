@@ -377,8 +377,7 @@ $('#mainPage').on('pageshow', function() {
 					urlQuery += item + '=' + conditions[item] + '&';
 				});
 				urlQuery = urlQuery.slice(0,urlQuery.length-1);
-				var urlpath = (location.pathname === '/') ? '/' : location.pathname + '/';
-				window.open(location.origin+urlpath+'filteredList.html'+urlQuery);
+				window.open('filteredList.html'+urlQuery);
 			}
 		} else {
 			papamamap.addNurseryFacilitiesLayer(nurseryFacilities);
