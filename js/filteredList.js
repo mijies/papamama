@@ -26,7 +26,7 @@ if(location.search) {
   var filterObj = {
 		OpenTime: '開園',
 		CloseTime: '終園',
-		'24H': '24時間',
+		H24: '24時間',
 		IchijiHoiku: '一時保育',
 		Yakan: '夜間',
 		Kyujitu: '休日',
@@ -35,7 +35,7 @@ if(location.search) {
 
   var conditions = {};
   location.search
-    .slice(1,location.search.length)
+    .substr(1)
     .split('&')
     .forEach(function(item) {
       item.split('=')
