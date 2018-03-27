@@ -99,15 +99,26 @@ Papamamap.prototype.generate = function(mapServerListItem)
 };
 
 /**
+ * レイヤー名を取得する
+ * @param  {[type]} cbName [description]
+ * @return {[type]}        [description]
+ */
+Papamamap.prototype.getLayerName = function(name)
+{
+    return 'layer' + name;
+};
+
+/**
  * 指定した名称のレイヤーの表示・非表示を切り替える
  * @param  {[type]} layerName [description]
  * @param  {[type]} visible   [description]
  * @return {[type]}           [description]
  */
-Papamamap.prototype.switchLayer = function(layerName, visible)
-{
+Papamamap.prototype.switchLayer = function(layerName, visible) {
+    // layerNameはcheckboxのid属性から取得しているため先頭の"cb"を取り除く
+    var _layerName = this.getLayerName(layerName.substr(2));
     this.map.getLayers().forEach(function(layer) {
-        if (layer.get('name') == layerName) {
+        if (layer.get('name') == _layerName) {
             layer.setVisible(visible);
         }
     });
@@ -642,29 +653,4 @@ Papamamap.prototype.drawCenterCircle = function(radius, moveToPixel)
     var source = layer.getSource();
     source.addFeatures(circleFeatures);
     return;
-};
-
-/**
- * レイヤー名を取得する
- * @param  {[type]} cbName [description]
- * @return {[type]}        [description]
- */
-Papamamap.prototype.getLayerName = function(cbName)
-{
-    return 'layer' + cbName;
-};
-
-/**
- * 指定した名称のレイヤーの表示・非表示を切り替える
- * @param  {[type]} layerName [description]
- * @param  {[type]} visible   [description]
- * @return {[type]}           [description]
- */
-Papamamap.prototype.switchLayer = function(layerName, visible) {
-    var _layerName = this.getLayerName(layerName.substr(2));
-    this.map.getLayers().forEach(function(layer) {
-        if (layer.get('name') == _layerName) {
-            layer.setVisible(visible);
-        }
-    });
 };
