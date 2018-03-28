@@ -376,7 +376,7 @@ $('#mainPage').on('pageshow', function() {
 				Object.keys(conditions).forEach(function(item) {
 					urlQuery += item + '=' + conditions[item] + '&';
 				});
-				urlQuery = urlQuery.slice(0,urlQuery.length-1);
+				urlQuery = urlQuery.slice(0, -1);
 				window.open('filteredList.html'+urlQuery);
 			}
 		} else {
@@ -646,7 +646,7 @@ if (document.getElementById("filterdialog")) {
 			  options += '<option value="' + hour + ':00">' + hour + ':00以降</option>';
 			  options += '<option value="' + hour + ':30">' + hour + ':30以降</option>';
 		}
-		options += '<option value="22:00">22:00以前</option>';
+		options += '<option value="22:00">22:00以降</option>';
 		[
 			"pubNinkaCloseTime",
 			"priNinkaCloseTime",
