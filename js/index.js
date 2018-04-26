@@ -7,7 +7,7 @@ var bing_api_key = 'Ahs7qRRd1eAtwgE7igbe7DOnXYvq_Pg81foKgM727r3S1949_mj8hrsqIY4i
 // map
 var map;
 
-// 保育施設JSON格納用オブジェクト
+// 保育施設JSON格納用オブジェクト	
 var nurseryFacilities = {};
 
 // 中心座標変更セレクトボックス用データ
@@ -614,14 +614,14 @@ $('#mainPage').on('pageshow', function() {
 if (document.getElementById("filterdialog")) {
 	(function () {
 		var startHour = 7;
-		var endHour = 8;
+		var endHour = 9;
 		var options = '<option value="">開園</option>';
 		for(var hour = startHour ; hour <=endHour; hour++){
 			  options += '<option value="' + hour + ':00">' + hour + ':00以前</option>';
 			  options += '<option value="' + hour + ':15">' + hour + ':15以前</option>';
 			  options += '<option value="' + hour + ':45">' + hour + ':45以前</option>';
 		}
-		options += '<option value="9:00">9:00以前</option>';
+		options += '<option value="10:00">10:00以前</option>';
 		[
 			"pubNinkaOpenTime",
 			"priNinkaOpenTime",
