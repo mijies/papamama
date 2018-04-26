@@ -639,7 +639,7 @@ if (document.getElementById("filterdialog")) {
 	* 保育施設絞り込みの終園時間のselectタグのoptionの生成
 	**/
 	(function () {
-		var startHour = 18;
+		var startHour = 17;
 		var endHour = 21;
 		var options = '<option value="">終園</option>';
 		for(var hour = startHour ; hour <=endHour; hour++){
