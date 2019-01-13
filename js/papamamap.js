@@ -540,6 +540,57 @@ Papamamap.prototype.getPopupContent = function(feature)
         content += '<td>' + owner + '</td>';
         content += '</tr>';
     }
+    var foundation = feature.get('設立年度') ? feature.get('設立年度') : feature.get('Foundation');
+    if (!isUndefined(foundation)) {
+        var foundation_year = foundation.substring(0, 4);
+        var current_date = new Date();
+        var diffday = compareDate(current_date.getFullYear(), current_date.getMonth()+1, current_date.getDate(), foundation.substring(0, 4), foundation.substring(4, 5), foundation.substring(5, 6));
+        if(diffday <= 365*2){
+            content += '<tr>';
+            content += '<th>設立年度</th>';
+            content += '<td>' + foundation_year + "年新設" + '</td>';
+            if(diffday < 0){
+                content += '<td>' + "予定" + '</td>';
+            }
+            content += '</tr>';
+        }
+    }
+    var pre = feature.get('プレ幼稚園') ? feature.get('プレ幼稚園') : feature.get('Pre');
+    if (!isUndefined(pre)) {
+        content += '<tr>';
+        content += '<th>プレ幼稚園</th>';
+        if(pre == "Y"){
+            content += '<td>' + "あり" + '</td>';
+        }else{
+            content += '<td>' + "なし" + '</td>';
+        }
+        content += '</tr>';
+    }
+    var bus = feature.get('園バス') ? feature.get('園バス') : feature.get('Bus');
+    if (!isUndefined(bus)) {
+        content += '<tr>';
+        content += '<th>園バス</th>';
+        if(bus == "Y"){
+            content += '<td>' + "あり" + '</td>';
+        }else{
+            content += '<td>' + "なし" + '</td>';
+        }
+        content += '</tr>';
+    }
+    var lunch = feature.get('給食') ? feature.get('給食') : feature.get('Lunch');
+    if (!isUndefined(lunch)) {
+        if(type !== "幼稚園") {
+            content += '<tr>';
+            content += '<th>給食</th>';
+            if(lunch !== "0"){
+                content += '<td>' + "週" + lunch + "日" + '</td>';
+                content += '</tr>';
+            }else{
+                content += '<td>' + "なし" + '</td>';
+                content += '</tr>';
+            }
+        }
+    }
     content += '</tbody></table>';
     return content;
 };
@@ -571,6 +622,15 @@ function isUndefined(param){
   } else {
     return false;
   }
+}
+
+/* 日付の差を求める関数*/
+function compareDate(year1, month1, day1, year2, month2, day2) {
+    var dt1 = new Date(year1, month1 - 1, day1);
+    var dt2 = new Date(year2, month2 - 1, day2);
+    var diff = dt1 - dt2;
+    var diffDay = diff / 86400000;//1日は86400000ミリ秒
+    return diffDay;
 }
 
 /**
