@@ -400,6 +400,7 @@ Papamamap.prototype.getPopupTitle = function(feature)
  */
 Papamamap.prototype.getPopupContent = function(feature)
 {
+    var type = feature.get('Type');
     var content = '';
     content = '<table><tbody>';
     var open  = feature.get('開園時間') ? feature.get('開園時間') : feature.get('Open');
@@ -579,17 +580,10 @@ Papamamap.prototype.getPopupContent = function(feature)
     }
     var lunch = feature.get('給食') ? feature.get('給食') : feature.get('Lunch');
     if (!isUndefined(lunch)) {
-        if(type !== "幼稚園") {
-            content += '<tr>';
-            content += '<th>給食</th>';
-            if(lunch !== "0"){
-                content += '<td>' + "週" + lunch + "日" + '</td>';
-                content += '</tr>';
-            }else{
-                content += '<td>' + "なし" + '</td>';
-                content += '</tr>';
-            }
-        }
+        content += '<tr>';
+        content += '<th>給食</th>';
+        content += '<td>' + lunch + '</td>';
+        content += '</tr>';
     }
     content += '</tbody></table>';
     return content;
