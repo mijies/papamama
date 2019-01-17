@@ -425,10 +425,6 @@ Papamamap.prototype.getPopupContent = function(feature)
     var night   = feature.get('Night');
     var h24     = feature.get('H24');
     var extra   = feature.get('Extra');
-    var founded = feature.get('設立年度');
-    var pre   = feature.get('プレ幼稚園');
-    var bus = feature.get('園バス');
-    var meal   = feature.get('給食');
     var disability = feature.get('児童発達支援');
     var d_degree   = feature.get('重心（児童発達）');
     var after = feature.get('放課後デイ');
@@ -452,18 +448,6 @@ Papamamap.prototype.getPopupContent = function(feature)
         }
         if (formatNull(extra) !== null) {
             content += '延長保育 ';
-        }
-        if (formatNull(founded) !== null) {
-            content += '設立年度 ';
-        }
-        if (formatNull(pre) !== null) {
-            content += 'プレ幼稚園 ';
-        }
-        if (formatNull(bus) !== null) {
-            content += '園バス ';
-        }
-        if (formatNull(meal) !== null) {
-            content += '給食 ';
         }
         if (formatNull(disability) !== null) {
             content += '児童発達支援';
