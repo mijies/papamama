@@ -378,13 +378,13 @@ Papamamap.prototype.getPopupTitle = function(feature)
 {
     // タイトル部
     var title = '';
-    var type = feature.get('種別') ? feature.get('種別') : feature.get('Type');
+    var type = feature.get('Type');
     title  = '[' + type + '] ';
-    var owner = feature.get('設置') ? feature.get('設置') : feature.get('Ownership');
+    var owner = feature.get('Ownership');
     if(!isUndefined(owner)) {
         title += ' [' + owner +']';
     }
-    var name = feature.get('名称') ? feature.get('名称') : feature.get('Name');
+    var name = feature.get('Name');
     title += name;
     url = feature.get('url');
     if(!isUndefined(url)) {
@@ -400,193 +400,145 @@ Papamamap.prototype.getPopupTitle = function(feature)
  */
 Papamamap.prototype.getPopupContent = function(feature)
 {
+    var contentFactory = {
+        content: '<table><tbody>',
+        addContent: function(rowSet){
+            this.content += '<tr>';
+            this.content += `<th>${rowSet.th}</th>`;
+            this.content += `<td>${rowSet.td}</td>`;
+            this.content += '</tr>';
+        },
+        completeContent: function(){
+            this.content += '</tbody></table>';
+            return this.content;
+        }
+    };
+
     var type = feature.get('Type');
-    var content = '';
-    content = '<table><tbody>';
-    var open  = feature.get('開園時間') ? feature.get('開園時間') : feature.get('Open');
-    var close = feature.get('終園時間') ? feature.get('終園時間') : feature.get('Close');
+
+    var open  = feature.get('Open');
+    var close = feature.get('Close');
     if (!isUndefined(open) && !isUndefined(close)) {
-        content += '<tr>';
-        content += '<th>時間</th>';
-        content += '<td>';
-        content += open + '〜' + close;
-        content += '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '時間',
+            td: open + '〜' + close
+        });
     }
-    var memo = feature.get('備考') ? feature.get('備考') : feature.get('Memo');
+    var memo = feature.get('Memo');
     if (!isUndefined(memo)) {
-        content += '<tr>';
-        content += '<th></th>';
-        content += '<td>' + memo + '</td>';
-        content += '</tr>';
-    }
-    var temp    = feature.get('一時') ? feature.get('一時') : feature.get('Temp');
-    var holiday = feature.get('休日') ? feature.get('休日') : feature.get('Holiday');
-    var night   = feature.get('夜間') ? feature.get('夜間') : feature.get('Night');
-    var h24     = feature.get('H24') ? feature.get('H24') : feature.get('H24');
-    var extra   = feature.get('延長保育') ? feature.get('延長保育') : feature.get('Extra');
-    var founded = feature.get('設立年度');
-    var pre   = feature.get('プレ幼稚園');
-    var bus = feature.get('園バス');
-    var meal   = feature.get('給食');
-    var disability = feature.get('児童発達支援');
-    var d_degree   = feature.get('重心（児童発達）');
-    var after = feature.get('放課後デイ');
-    var a_degree   = feature.get('重心（放課後デイ）');
+        contentFactory.addContent({
+            th: '',
+            td: memo
+        });
+    }    
 
-    if( !isUndefined(temp) || !isUndefined(holiday) || !isUndefined(night) || !isUndefined(h24) || !isUndefined(extra) || !isUndefined(founded) || !isUndefined(pre) || !isUndefined(bus) || !isUndefined(meal) || !isUndefined(disability) || !isUndefined(d_degree) || !isUndefined(after) || !isUndefined(a_degree)) {
-        content += '<tr>';
-        content += '<th></th>';
-        content += '<td>';
-        if (formatNull(temp) !== null) {
-            content += '一時保育 ';
-        }
-        if (formatNull(holiday) !== null) {
-            content += '休日保育 ';
-        }
-        if (formatNull(night) !== null) {
-            content += '夜間保育 ';
-        }
-        if (formatNull(h24) !== null) {
-            content += '24時間 ';
-        }
-        if (formatNull(extra) !== null) {
-            content += '延長保育 ';
-        }
-        if (formatNull(founded) !== null) {
-            content += '設立年度 ';
-        }
-        if (formatNull(pre) !== null) {
-            content += 'プレ幼稚園 ';
-        }
-        if (formatNull(bus) !== null) {
-            content += '園バス ';
-        }
-        if (formatNull(meal) !== null) {
-            content += '給食 ';
-        }
-        if (formatNull(disability) !== null) {
-            content += '児童発達支援';
-        }
-        if (formatNull(d_degree) !== null) {
-            content += '(' + d_degree +') ';
-        } else {content += ' ';}
-        if (formatNull(after) !== null) {
-            content += '放課後デイ';
-        }
-        if (formatNull(a_degree) !== null) {
-            content += '(' + a_degree +') ';
-        } else {content += ' ';}
-        content += '</td>';
-        content += '</tr>';
+    var items = "";
+    [
+        temp    = feature.get('Temp') ? '一時保育 ' : "",
+        holiday = feature.get('Holiday') ? '休日保育 ' : "",
+        night   = feature.get('Night') ? '夜間保育 ' : "",
+        h24     = feature.get('H24') ? '24時間 ' : "",
+        extra   = feature.get('Extra') ? '延長保育 ' : "",
+        disability = feature.get('児童発達支援') ? '児童発達支援 ' : "",
+        d_degree   = feature.get('重心（児童発達）') ? `(${feature.get('重心（児童発達）')})` : "",
+        after = feature.get('放課後デイ') ? '放課後デイ ' : "",
+        a_degree   = feature.get('重心（放課後デイ）') ? `(${feature.get('重心（放課後デイ）')})` : ""
+    ].forEach(function(elem){
+        items += elem ? elem : "";
+    });
+    if (items !== "") {
+        contentFactory.addContent({
+            th: '',
+            td: items
+        });
     }
 
-    // var type = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-    // if(type == "私立認可保育所") {
-    //     content += '<tr>';
-    //     content += '<th>欠員</th>';
-    //     content += '<td>';
-    //     var vacancy = feature.get('Vacancy') ? feature.get('Vacancy') : feature.get('Vacancy');
-    //     if (!isUndefined(vacancy)) {
-    //         content += '<a href="http://www.city.yokohama.lg.jp/kohoku/sabisu/hoiku/" target="_blank">空き情報</a>';
-    //     }
-    //     var vacancyDate = feature.get('VacancyDate');
-    //     if (!isUndefined(vacancyDate)) {
-    //         content += " (" + vacancyDate + ")";
-    //     }
-    //     content += '</td>';
-    //     content += '</tr>';
-    // }
-    var ageS = feature.get('開始年齢') ? feature.get('開始年齢') : feature.get('AgeS');
-    var ageE = feature.get('終了年齢') ? feature.get('終了年齢') : feature.get('AgeE');
+    var ageS = feature.get('AgeS');
+    var ageE = feature.get('AgeE');
     if (!isUndefined(ageS) && !isUndefined(ageE)) {
-        content += '<tr>';
-        content += '<th>年齢</th>';
-        content += '<td>' + ageS + '〜' + ageE + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '年齢',
+            td: ageS + '〜' + ageE
+        });
     }
-    var full = feature.get('定員') ? feature.get('定員') : feature.get('Full');
+    var full = feature.get('Full');
     if (!isUndefined(full)) {
-        content += '<tr>';
-        content += '<th>定員</th>';
-        content += '<td>' + full + '人</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '定員',
+            td: full
+        });
     }
-    var tel = feature.get('TEL') ? feature.get('TEL') : feature.get('TEL');
+    var tel = feature.get('TEL');
     if (!isUndefined(tel)) {
-        content += '<tr>';
-        content += '<th>TEL</th>';
-        content += '<td>' + tel + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: 'TEL',
+            td: tel
+        });
     }
-    var fax = feature.get('FAX') ? feature.get('FAX') : feature.get('FAX');
+    var fax = feature.get('FAX');
     if (!isUndefined(fax)) {
-        content += '<tr>';
-        content += '<th>FAX</th>';
-        content += '<td>' + fax + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: 'FAX',
+            td: fax
+        });
     }
-    var add1 = feature.get('住所１') ? feature.get('住所１') : feature.get('Add1');
-    var add2 = feature.get('住所２') ? feature.get('住所２') : feature.get('Add2');
+    var add1 = feature.get('Add1');
+    var add2 = feature.get('Add2');
     if (!isUndefined(add1) || !isUndefined(add2)) {
-        content += '<tr>';
-        content += '<th>住所</th>';
-        content += '<td>' + add1 + add2 +'</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '住所',
+            td: add1 + add2
+        });
     }
-    var owner = feature.get('設置者') ? feature.get('設置者') : feature.get('Owner');
+    var owner = feature.get('Owner');
     if (!isUndefined(owner)) {
-        content += '<tr>';
-        content += '<th>設置者</th>';
-        content += '<td>' + owner + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '設置者',
+            td: owner
+        });
     }
-    var foundation = feature.get('設立年度') ? feature.get('設立年度') : feature.get('Foundation');
+    var foundation = feature.get('設立年度');
     if (!isUndefined(foundation)) {
-        var foundation_year = foundation.substring(0, 4);
-        var current_date = new Date();
-        var diffday = compareDate(current_date.getFullYear(), current_date.getMonth()+1, current_date.getDate(), foundation.substring(0, 4), foundation.substring(4, 5), foundation.substring(5, 6));
-        if(diffday <= 365*2){
-            content += '<tr>';
-            content += '<th>設立年度</th>';
-            content += '<td>' + foundation_year + "年新設" + '</td>';
-            if(diffday < 0){
-                content += '<td>' + "予定" + '</td>';
-            }
-            content += '</tr>';
-        }
+        contentFactory.addContent({
+            th: '設立年度',
+            td: foundation
+        });
+        // var foundation_year = foundation.substring(0, 4);
+        // var current_date = new Date();
+        // var diffday = compareDate(current_date.getFullYear(), current_date.getMonth()+1, current_date.getDate(), foundation.substring(0, 4), foundation.substring(4, 5), foundation.substring(5, 6));
+        // if(diffday <= 365*2){
+        //     content += '<tr>';
+        //     content += '<th>設立年度</th>';
+        //     content += '<td>' + foundation_year + "年新設" + '</td>';
+        //     if(diffday < 0){
+        //         content += '<td>' + "予定" + '</td>';
+        //     }
+        //     content += '</tr>';
+        // }
     }
-    var pre = feature.get('プレ幼稚園') ? feature.get('プレ幼稚園') : feature.get('Pre');
+    var pre = feature.get('プレ幼稚園');
     if (!isUndefined(pre)) {
-        content += '<tr>';
-        content += '<th>プレ幼稚園</th>';
-        if(pre == "Y"){
-            content += '<td>' + "あり" + '</td>';
-        }else{
-            content += '<td>' + "なし" + '</td>';
-        }
-        content += '</tr>';
+        contentFactory.addContent({
+            th: 'プレ幼稚園',
+            td: (pre === "Y") ? "あり" : "なし" 
+        });
     }
-    var bus = feature.get('園バス') ? feature.get('園バス') : feature.get('Bus');
+    var bus = feature.get('園バス');
     if (!isUndefined(bus)) {
-        content += '<tr>';
-        content += '<th>園バス</th>';
-        if(bus == "Y"){
-            content += '<td>' + "あり" + '</td>';
-        }else{
-            content += '<td>' + "なし" + '</td>';
-        }
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '園バス',
+            td: (bus === "Y") ? "あり" : "なし" 
+        });
     }
-    var lunch = feature.get('給食') ? feature.get('給食') : feature.get('Lunch');
+    var lunch = feature.get('給食');
     if (!isUndefined(lunch)) {
-        content += '<tr>';
-        content += '<th>給食</th>';
-        content += '<td>' + lunch + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '給食',
+            td: lunch
+        });
     }
-    content += '</tbody></table>';
-    return content;
+
+    return contentFactory.completeContent();
 };
 
 /**
