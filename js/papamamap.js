@@ -162,13 +162,11 @@ Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
  */
 Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
 {
-    if(this.map.getLayers().getLength() >= 4) {
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
+    /**
+     * Papamamap.prototype.generate()のnew ol.Map()の
+     * 初期化で追加したレイヤー以外は削除する。
+     */
+    while (this.map.getLayers().getLength() > 4) {
         this.map.removeLayer(this.map.getLayers().item(4));
     }
 
