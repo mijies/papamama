@@ -44,14 +44,11 @@ if(location.search) {
          });
      });
 
-  // 地図レイヤー定義
-	var papamamap = new Papamamap();
-	// papamamap.viewCenter = init_center_coords;
-	papamamap.generate(mapServerList['bing-road']);
-	map = papamamap.map;
+  // 保育施設JSON格納用オブジェクト	
+  var nurseryFacilities = {};
 
 	// 保育施設の読み込みとレイヤーの追加
-	papamamap.loadNurseryFacilitiesJson(function(data){
+	Papamamap.prototype.loadNurseryFacilitiesJson(function(data){
 		nurseryFacilities = data;
 	})
   .then(function(){

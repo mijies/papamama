@@ -1,106 +1,15 @@
-// 地図表示時の中心座標
-var init_center_coords = [139.61827, 35.51264];
 
-// Bing APIのキー
-var bing_api_key = 'Ahs7qRRd1eAtwgE7igbe7DOnXYvq_Pg81foKgM727r3S1949_mj8hrsqIY4iAxW9';
-
-// map
-var map;
-
-// 保育施設JSON格納用オブジェクト	
-var nurseryFacilities = {};
-
-// 中心座標変更セレクトボックス用データ
-var moveToList = [];
-
-// マップサーバ一覧
-var mapServerList = {
-	'bing-road': {
-		label: "標準(Bing)",
-		source_type: "bing",
-		source: new ol.source.BingMaps({
-			culture: 'ja-jp',
-			key: bing_api_key,
-			imagerySet: 'Road',
-		})
-	},
-	'mierune-mono': {
-		label: "白地図",
-		source_type: "xyz",
-		source: new ol.source.XYZ({
-			attributions: [
-				new ol.Attribution({
-					html: "Maptiles by MIERUNE, under CC BY. Data by OpenStreetMap contributors, under ODbL."
-				})
-			],
-			url: "https://tile.mierune.co.jp/mierune_mono/{z}/{x}/{y}.png",
-			projection: "EPSG:3857"
-		})
-	},
-	"cyberjapn-pale": {
-		label: "国土地理院",
-		source_type: "xyz",
-		source: new ol.source.XYZ({
-			attributions: [
-				new ol.Attribution({
-					html: "<a href='http://portal.cyberjapan.jp/help/termsofuse.html' target='_blank'>国土地理院</a>"
-				})
-			],
-			url: "http://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
-			projection: "EPSG:3857"
-		})
-	},
-	'osm': {
-		label: "交通",
-		source_type: "osm",
-		source: new ol.source.OSM({
-			url: "http://{a-c}.tile.thunderforest.com/transport/{z}/{x}/{y}.png",
-			attributions: [
-				ol.source.OSM.DATA_ATTRIBUTION,
-				new ol.Attribution({html: "Tiles courtesy of <a href='http://www.thunderforest.com/' target='_blank'>Andy Allan</a>"})
-			]
-		})
-	},
-	'bing-aerial': {
-		label: "写真",
-		source_type: "bing",
-		source: new ol.source.BingMaps({
-			culture: 'ja-jp',
-			key: bing_api_key,
-			imagerySet: 'Aerial',
-		})
-	}
-};
-
-/**
- * デバイス回転時、地図の大きさを画面全体に広げる
- * @return {[type]} [description]
- */
- function resizeMapDiv() {
- 	var screenHeight = $.mobile.getScreenHeight();
- 	// var contentCurrentHeight = $(".ui-content").outerHeight() - $(".ui-content").height();
- 	// var contentHeight = screenHeight - contentCurrentHeight;
- 	// var navHeight = $("#nav1").outerHeight();
- 	// $(".ui-content").height(contentHeight);
- 	$(".ui-content").height(screenHeight);
- 	$("#map").height(screenHeight);
- 	// $("#map").height(contentHeight - navHeight);
-}
-
-$(window).on("orientationchange", function() {
-	resizeMapDiv();
-	map.setTarget('null');
-	map.setTarget('map');
-});
-
-
+///// mapとpapamamap.mapのインスタンスが異なる副作用懸念
 $('#mainPage').on('pageshow', function() {
 	resizeMapDiv();
 
-	// 地図レイヤー定義
-	var papamamap = new Papamamap();
-	papamamap.viewCenter = init_center_coords;
-	papamamap.generate(mapServerList['bing-road']);
+	// 地図レイヤー初期化
+	var papamamap = new Papamamap(
+		init_center_coords,
+		mapServerList['bing-road']
+	);
+	// papamamap.viewCenter = init_center_coords;
+	// papamamap.generate(mapServerList['bing-road']);
 	map = papamamap.map;
 
 	// 保育施設の読み込みとレイヤーの追加
@@ -546,7 +455,7 @@ $('#mainPage').on('pageshow', function() {
 	 var toggleNavbar = function () {
 
 		  // マップのサイズを画面サイズに調整
-		  resizeMapDiv();
+		//   resizeMapDiv();
 
 		 	var elem = document.getElementsByClassName("nav1-li");
 			document.getElementById("nav1").style.top = "0px";
@@ -606,6 +515,20 @@ $('#mainPage').on('pageshow', function() {
 	 });
 
 });
+
+// デバイス回転時、地図の大きさを画面全体に広げる
+$(window).on("orientationchange", function() {
+	resizeMapDiv();
+	map.setTarget('null');
+	map.setTarget('map');
+});
+
+// 地図の大きさを画面全体に広げる
+function resizeMapDiv() {
+	var screenHeight = $.mobile.getScreenHeight();
+	$(".ui-content").height(screenHeight);
+	$("#map").height(screenHeight);
+}
 
 /**
 * 保育施設絞り込みの開園時間のselectタグのoptionの生成

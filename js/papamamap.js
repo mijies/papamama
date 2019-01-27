@@ -7,10 +7,11 @@
  * @property {number}         centerLatOffsetPixel 緯度表示位置の調整用オフセット
  *
  */
-window.Papamamap = function() {
+window.Papamamap = function(init_center_coords, mapServer) {
     this.map;
-    this.viewCenter = [];
+    this.viewCenter = init_center_coords;
     this.centerLatOffsetPixel = 75;
+    this.generate(mapServer);
 };
 
 /**
