@@ -16,6 +16,8 @@ var bing_api_key = 'Ahs7qRRd1eAtwgE7igbe7DOnXYvq_Pg81foKgM727r3S1949_mj8hrsqIY4i
 // 保育施設JSON格納用オブジェクト	
 var nurseryFacilities = {};
 
+var initialMapServer = 'bing-road';
+
 // マップサーバ一覧
 var mapServerList = {
 	'bing-road': {

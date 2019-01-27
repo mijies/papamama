@@ -6,10 +6,8 @@ $('#mainPage').on('pageshow', function() {
 	// 地図レイヤー初期化
 	var papamamap = new Papamamap(
 		init_center_coords,
-		mapServerList['bing-road']
+		mapServerList[initialMapServer]
 	);
-	// papamamap.viewCenter = init_center_coords;
-	// papamamap.generate(mapServerList['bing-road']);
 	map = papamamap.map;
 
 	// 保育施設の読み込みとレイヤーの追加
