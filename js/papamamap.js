@@ -1,13 +1,16 @@
 /**
- * コンストラクタ
- *
- * @param ol.Map map OpenLayers3 map object
+ * Papamamap :
+ *   コンストラクタであり、index.jsの$('#mainPage').onでnewされる
+ * 
+ * @property {object}         map ol.Map
+ * @property {Array.<number>} viewCenter マップの初期中心座標
+ * @property {number}         centerLatOffsetPixel 緯度表示位置の調整用オフセット
  *
  */
 window.Papamamap = function() {
-    this.map = null;
-    this.centerLatOffsetPixel = 75;
+    this.map;
     this.viewCenter = [];
+    this.centerLatOffsetPixel = 75;
 };
 
 /**
