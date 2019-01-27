@@ -9,6 +9,7 @@
  */
 window.Papamamap = function(init_center_coords, mapServer) {
     this.map;
+    this.popup;
     this.viewCenter = init_center_coords;
     this.centerLatOffsetPixel = 75;
     this.generate(mapServer);

@@ -3,16 +3,6 @@
 if(location.search) {
 
   // 条件作成処理
-	var checkObj = {
-		pubNinka: false,
-		priNinka: false,
-		ninkagai: false,
-		yhoiku: false,
-		kindergarten: false,
-		jigyosho: false,
-    disability: false
-	};
-
   var typeObj = {
 		pubNinka: '公立認可保育所',
 		priNinka: '私立認可保育所',
@@ -21,7 +11,12 @@ if(location.search) {
 		kindergarten: '幼稚園',
 		jigyosho: '小規模・事業所内保育事業',
     disability: '障害児通所支援事業'
-	};
+  };
+  
+  var checkObj = {};
+  Object.keys(typeObj).forEach(function(elem){
+    checkObj[elem] = false;
+  });
 
   var filterObj = {
 		OpenTime: '開園',

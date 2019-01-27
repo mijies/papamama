@@ -76,3 +76,39 @@ var mapServerList = {
 		})
 	}
 };
+
+var facilityObj = {
+	pubNinka: {
+		type: '公立認可保育所',
+		cb: '#cbPubNinka',
+	},
+	priNinka: {
+		type: '私立認可保育所',
+		cb: '#cbPriNinka'
+	},
+	ninkagai: {
+		type: '認可外保育施設',
+		cb: '#cbNinkagai'
+	},
+	yhoiku: {
+		type: '横浜保育室',
+		cb: '#cbYhoiku'
+	},
+	kindergarten: {
+		type: '幼稚園',
+		cb: '#cbKindergarten'
+	},
+	jigyosho: {
+		type: '小規模・事業所内保育事業',
+		cb: '#cbJigyosho'
+	},
+	disability: {
+		type: '障害児通所支援事業',
+		cb: '#cbDisability'
+	}
+};
+
+var cdSchoolArray = [
+	'#cbMiddleSchool',
+	'#cbElementarySchool'
+];
