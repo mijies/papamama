@@ -8,9 +8,13 @@ window.FacilityFilter = function () {};
  * @param  {[type]} checkObj          [description]
  * @return {[type]}                   [description]
  */
-FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurseryFacilities, checkObj)
+// FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurseryFacilities, checkObj)
+FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (filterSet, nurseryFacilities)
 {
-  	'use strict';
+    'use strict';
+    
+    var conditions = filterSet.conditions;
+    var checkObj = filterSet.checkObj;
 
     // 絞り込み適用後のすべての施設を格納するGeoJSONを準備
     var newGeoJson = {
@@ -141,7 +145,7 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurs
           }
       });
       // Google Analyticsイベントトラッキングの値の生成(アキュムレーション)
-      checkObj.filterPattern += gaEventVal[item];
+      filterSet.ga_label += gaEventVal[item];
     });
 
     // 戻り値の作成

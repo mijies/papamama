@@ -58,8 +58,8 @@ if(location.search) {
 
 function createFilteredList () {
   var filter = new FacilityFilter();
-  checkObj.filterPattern = 0; // Google Analyticsのイベントトラッキングで送信する値のデフォルト値
-  var newGeoJson = filter.getFilteredFeaturesGeoJson(conditions, nurseryFacilities, checkObj); // checkObjを参照渡しで表示レイヤーを取得する
+  ga_label = 0; // 定義のみで使用されない
+  var newGeoJson = filter.getFilteredFeaturesGeoJson({conditions, checkObj, ga_label}, nurseryFacilities); // checkObjを参照渡しで表示レイヤーを取得する
 
   var typeArr = [];
   Object.keys(checkObj).forEach(function(item){

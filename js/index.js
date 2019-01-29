@@ -1,5 +1,4 @@
 
-///// mapとpapamamap.mapのインスタンスが異なる副作用懸念
 $('#mainPage').on('pageshow', function() {
 	resizeMapDiv();
 
@@ -32,7 +31,7 @@ $('#mainPage').on('pageshow', function() {
 
 	// 最寄駅セレクトボックスの生成
 	MoveToList.prototype.loadStationJson().then(function() {
-		MoveToList.prototype.appendToMoveToListBox(moveToList)
+		MoveToList.prototype.appendToMoveToListBox(moveToList);
 	});
 
 	// 保育施設クリック時の挙動を定義
@@ -96,7 +95,9 @@ $('#mainPage').on('pageshow', function() {
 			clearMarker();
 		} else {
 			// 指定した最寄り駅に移動
-			papamamap.moveToSelectItem(moveToList[$(this).val()]);
+			papamamap.moveToSelectItem(
+				moveToList[$(this).val()]
+			);
 
 			// 地図上にマーカーを設定する
 			var pos = ol.proj.transform(
@@ -134,7 +135,9 @@ $('#mainPage').on('pageshow', function() {
 		MoveCurrentLocationControl.prototype.getCurrentPosition(
 			function(pos) {
 				var coordinate = ol.proj.transform(
-					[pos.coords.longitude, pos.coords.latitude], 'EPSG:4326', 'EPSG:3857');
+					[pos.coords.longitude, pos.coords.latitude], 
+					'EPSG:4326', 'EPSG:3857'
+				);
 				map.getView().setCenter(coordinate);
 				drawMarker(coordinate, "現在地");
 			},
@@ -146,7 +149,7 @@ $('#mainPage').on('pageshow', function() {
 
 	// 半径セレクトボックスのイベント定義
 	$('#changeCircleRadius').change(function(evt){
-		radius = $(this).val();
+		var radius = $(this).val();
 		if(radius === "") {
 			clearCenterCircle();
 			$('#cbDisplayCircle').prop('checked', false).checkboxradio('refresh');
@@ -158,7 +161,7 @@ $('#mainPage').on('pageshow', function() {
 
 	// 円表示ボタンのイベント定義
 	$('#cbDisplayCircle').click(function(evt){
-		radius = $('#changeCircleRadius').val();
+		var radius = $('#changeCircleRadius').val();
 		$('#cbDisplayCircle').prop('checked')
 		? drawCenterCircle(radius)
 		: clearCenterCircle();
@@ -195,56 +198,62 @@ $('#mainPage').on('pageshow', function() {
 	'use strict';
 
 		// 条件作成処理
-		var conditions = {};
-		var checkObj = {};
+		var filterSet = {
+			conditions: {},
+			checkObj: {},	// 表示レイヤーの真偽値を取得
+			ga_label: 0 	// Google Analyticsのイベントトラッキングで送信するデフォルト値
+		};
+
 		Object.keys(facilityObj).forEach(function(elem){
-			checkObj[elem] = false;
+			filterSet.checkObj[elem] = false;
 		});
 
 		// 検索フィルターのセレクト(filtersbクラス)で選択されたもののみ抽出
 		$('select.filtersb option:selected').each(function(index,item) {
-			if (item.value) conditions[item.parentNode.id] = item.value;
+			if (item.value) filterSet.conditions[item.parentNode.id] = item.value;
 		});
 
 		// 検索フィルターのチェックボックス(filtercbクラス)で選択されたもののみ抽出
 		$('.filtercb').each(function(index,item ) {
-			if (item.checked) conditions[item .id] = 'Y';
+			if (item.checked) filterSet.conditions[item .id] = 'Y';
 		});
 
 		// フィルター適用時
-		if(Object.keys(conditions).length > 0) {
-			var filter = new FacilityFilter();
-			checkObj.filterPattern = 0; // Google Analyticsのイベントトラッキングで送信する値
-			var newGeoJson = filter.getFilteredFeaturesGeoJson(conditions, nurseryFacilities, checkObj); // checkObjを参照渡しで表示レイヤーを取得する
-			papamamap.addNurseryFacilitiesLayer(newGeoJson);
+		if(Object.keys(filterSet.conditions).length > 0) {
+
+			papamamap.addNurseryFacilitiesLayer(
+				FacilityFilter.prototype.getFilteredFeaturesGeoJson(filterSet, nurseryFacilities)
+			);
 			$('#btnFilter').css('background-color', '#3388cc');
+
 			// 検索結果の一覧のhtmlを新規タブで表示される。クエリで検索条件を新規Windowへ渡す
 			if (document.getElementById("filteredList").checked) {
 				var urlQuery = '?';
-				Object.keys(conditions).forEach(function(item) {
-					urlQuery += item + '=' + conditions[item] + '&';
+				Object.keys(filterSet.conditions).forEach(function(item) {
+					urlQuery += item + '=' + filterSet.conditions[item] + '&';
 				});
-				urlQuery = urlQuery.slice(0, -1);
-				window.open('filteredList.html'+urlQuery);
+				window.open(
+					'filteredList.html' + urlQuery.slice(0, -1)
+				);
 			}
+
 		} else {
+
 			papamamap.addNurseryFacilitiesLayer(nurseryFacilities);
 			$('#btnFilter').css('background-color', '#f6f6f6');
+
 			Object.keys(checkObj).forEach(function(item) {
-				checkObj[item] = true;
+				filterSet.checkObj[item] = true;
 			});
-			checkObj.filterPattern = 0; // Google Analyticsのイベントトラッキングで送信する値
 		}
 
 		// ga('send', 'event', 'カテゴリ', 'アクション', 'ラベル', '値', { nonInteraction: 真偽値 } )
  		// *nonInteraction: trueはイベントが発生しても直帰率に影響せず、falseはイベントの呼び出しで直帰とみなされなくなる
- 		ga('send', 'event', 'filter', this.id, checkObj.filterPattern) ;
+ 		ga('send', 'event', 'filter', this.id, filterSet.ga_label) ;
  		// 本イベントを直帰率へ反映させたくない場合は以下を使用すること。
  		// ga('send', 'event', 'nurseryFacilities', 'filter', this.id, checkObj.filterPattern, { nonInteraction: true });
 
-		// レイヤー表示状態によって施設の表示を切り替える
-		delete checkObj.filterPattern;
-		updateLayerStatus(checkObj);
+		updateLayerStatus(filterSet.checkObj); // レイヤー表示状態によって施設の表示を切り替える
 	});
 
 	// 絞込条件のリセット
@@ -314,6 +323,7 @@ $('#mainPage').on('pageshow', function() {
 				element: $('#center_markerTitle')
 			});
 			map.addOverlay(markerTitle);
+
 			$('#center_markerTitle').show();
 			$('#center_marker').show();
 		}
@@ -334,6 +344,7 @@ $('#mainPage').on('pageshow', function() {
 	 */
 	function drawMarker(coordinate, label) {
 		clearMarker();
+
 		var marker = new ol.Overlay({
 			position: coordinate,
 			positioning: 'center-center',
@@ -369,7 +380,6 @@ $('#mainPage').on('pageshow', function() {
 			elem[0].style.display ="none";
 			elem[1].style.display ="none";
 		}
-
 	});
 
 	// メニューバーとロゴをWindowサイズに合わせて配置を変更する
@@ -385,12 +395,13 @@ $('#mainPage').on('pageshow', function() {
 		Object.keys(elem[0].children).forEach(function(item){
 			elem[0].children[item].style.width = "";
 		});
-		["btnFilter", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(e) {
-			document.getElementById(e).style.width = "";
+		["btnFilter", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(evt) {
+			document.getElementById(evt).style.width = "";
 		});
 
 		elem[0].style.display ="inline-block";
 		elem[1].style.display ="inline-block";
+
 		var btn = document.getElementById("nav1-btn-div");
 		btn.style.display = "none";
 
@@ -405,6 +416,7 @@ $('#mainPage').on('pageshow', function() {
 			logo.style.top = "0";
 			logo.style.height = "0";
 			logo.style.bottom = "";
+
 			Object.keys(elem[0].children).forEach(function(i){
 				elem[0].children[i].style.width =  (window.innerWidth / 3 * 1) + "px";
 			});
@@ -437,8 +449,7 @@ $('#mainPage').on('pageshow', function() {
 	if (resizeTimer !== false) {
 		clearTimeout(resizeTimer);
 	}
-	///// cb渡し方あってる？
-	resizeTimer = setTimeout(toggleNavbar(), 100);
+	resizeTimer = setTimeout(toggleNavbar, 100);
 	});
 
 });

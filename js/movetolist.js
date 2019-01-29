@@ -3,7 +3,7 @@ window.MoveToList = function() {
 
 /**
  * 駅geojsonファイルを読み込み、moveToList配列に格納する
- * @return {[type]} [description]
+ * @return {object} Promise
  */
 MoveToList.prototype.loadStationJson = function()
 {
@@ -20,12 +20,12 @@ MoveToList.prototype.loadStationJson = function()
                     moveToList.push({name: _s, header: true});
                     lineName = _s;
                 }
-                _name = data.features[i].properties.N05_011;
-                _lat  = data.features[i].geometry.coordinates[1];
-                _lon  = data.features[i].geometry.coordinates[0];
-                moveToList.push(
-                    {name: _name, lat: _lat, lon: _lon, header:false}
-                    );
+                moveToList.push({
+                    name: data.features[i].properties.N05_011,
+                    lat: data.features[i].geometry.coordinates[1],
+                    lon: data.features[i].geometry.coordinates[0],
+                    header: false
+                });
             }
             d.resolve();
         }).fail(function(){
@@ -37,23 +37,19 @@ MoveToList.prototype.loadStationJson = function()
 
 /**
  * 最寄駅セレクトボックスに要素を追加する
- * @param  array moveToList [description]
- * @return {[type]}            [description]
+ * @param  array moveToList loadStationJsonのresolbe時の戻り値
  */
 MoveToList.prototype.appendToMoveToListBox = function(moveToList)
 {
-    nesting = "";
+    var nesting = "";
     for(i=0; i < moveToList.length; i++) {
         if(moveToList[i].header) {
-            if(nesting !== "") {
-                $('#moveTo').append(nesting);
-            }
+            if(nesting !== "") $('#moveTo').append(nesting);
             nesting = $('<optgroup>').attr('label', moveToList[i].name);
+
         } else {
             nesting.append($('<option>').html(moveToList[i].name).val(i));
         }
     }
-    if(nesting !== "") {
-        $('#moveTo').append(nesting);
-    }
+    if(nesting !== "") $('#moveTo').append(nesting);
 };
