@@ -18,12 +18,12 @@ window.Papamamap = function(init_center_coords, mapServer) {
 /**
  * マップを作成して保持する
  *
- * @param  {[type]} mapServerListItem [description]
- * @return {[type]}                   [description]
+ * @param  {object} mapServerListItem マップサーバのオブジェクト
  */
 Papamamap.prototype.generate = function(mapServerListItem)
 {
     this.map = new ol.Map({
+        target: 'map', // index.htmlの#map
         layers: [
             new ol.layer.Tile({
                 opacity: 1.0,
@@ -86,7 +86,6 @@ Papamamap.prototype.generate = function(mapServerListItem)
                  visible: true
             }),
         ],
-        target: 'map',
         view: new ol.View({
             center: ol.proj.transform(this.viewCenter, 'EPSG:4326', 'EPSG:3857'),
             zoom: 13,
@@ -103,30 +102,23 @@ Papamamap.prototype.generate = function(mapServerListItem)
     });
 };
 
-/**
- * レイヤー名を取得する
- * @param  {[type]} cbName [description]
- * @return {[type]}        [description]
- */
-Papamamap.prototype.getLayerName = function(name)
+// 指定した名称のレイヤーの表示・非表示を切り替える
+Papamamap.prototype.switchLayer = function(layerName, visible)
 {
-    return 'layer' + name;
-};
-
-/**
- * 指定した名称のレイヤーの表示・非表示を切り替える
- * @param  {[type]} layerName [description]
- * @param  {[type]} visible   [description]
- * @return {[type]}           [description]
- */
-Papamamap.prototype.switchLayer = function(layerName, visible) {
     // layerNameはcheckboxのid属性から取得しているため先頭の"cb"を取り除く
     var _layerName = this.getLayerName(layerName.substr(2));
+
     this.map.getLayers().forEach(function(layer) {
         if (layer.get('name') == _layerName) {
             layer.setVisible(visible);
         }
     });
+};
+
+// レイヤー名を取得する
+Papamamap.prototype.getLayerName = function(name)
+{
+    return 'layer' + name.slice(0,1).toUpperCase() + name.slice(1);
 };
 
 /**
@@ -135,9 +127,9 @@ Papamamap.prototype.switchLayer = function(layerName, visible) {
  * 座標参照系が変換済みの値を使うには false,
  * 変換前の値を使うには true を指定
  */
-Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
-{
-    // グローバル変数 map から view を取得する
+Papamamap.prototype.animatedMove = function(lon, lat, isTransform) {
+
+    // map から view を取得する
     view = this.map.getView();
     var pan = ol.animation.pan({
         duration: 850,
@@ -167,91 +159,26 @@ Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
  */
 Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
 {
-    /**
-     * Papamamap.prototype.generate()のnew ol.Map()の
-     * 初期化で追加したレイヤー以外は削除する。
-     */
+
+    // Papamamap.prototype.generate()のnew ol.Map()の
+    // 初期化で追加したレイヤー以外は削除する。
     while (this.map.getLayers().getLength() > 4) {
         this.map.removeLayer(this.map.getLayers().item(4));
     }
 
-    // 幼稚園
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerKindergarten',
-            style: kindergartenStyleFunction
-        })
-    );
-    // 認可外
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerNinkagai',
-            style: ninkagaiStyleFunction
-        })
-    );
-    // 私立認可
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerPriNinka',
-            style: priNinkaStyleFunction
-        })
-    );
-    // 公立認可
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerPubNinka',
-            style: pubNinkaStyleFunction
-        })
-    );
-    // 横浜保育室
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerYhoiku',
-            style: yhoikuStyleFunction
-        })
-    );
-    // 小規模・事業所内保育事業
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerJigyosho',
-            style: jigyoshoStyleFunction
-        })
-    );
-    // 障害児通所支援事業
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerDisability',
-            style: disabilityStyleFunction
-        })
-    );
+    // 各施設のレイヤーを追加
+    Object.keys(facilityObj).forEach(function(elem){
+        this.map.addLayer(
+            new ol.layer.Vector({
+                source: new ol.source.GeoJSON({
+                    projection: 'EPSG:3857',
+                    object: facilitiesData
+                }),
+                name: Papamamap.prototype.getLayerName(elem),
+                style: window[elem+'StyleFunction']
+            })
+        );
+    });
 };
 
 /**
@@ -309,7 +236,7 @@ Papamamap.prototype.changeMapServer = function(mapServerListItem, opacity)
  */
 Papamamap.prototype.getLayer = function(layerName)
 {
-    result = null;
+    var result;
     this.map.getLayers().forEach(function(layer) {
         if (layer.get('name') == layerName) {
             result = layer;
