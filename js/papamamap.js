@@ -175,7 +175,8 @@ Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
                     object: facilitiesData
                 }),
                 name: Papamamap.prototype.getLayerName(elem),
-                style: window[elem+'StyleFunction']
+                style: StyleFuncFactory(facilityObj[elem].type)
+                // style: window[elem+'StyleFunction']
             })
         );
     });

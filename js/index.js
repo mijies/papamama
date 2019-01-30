@@ -386,7 +386,7 @@ $('#mainPage').on('pageshow', function() {
 	function toggleNavbar() {
 
 		// // マップのサイズを画面サイズに調整
-		// resizeMapDiv();
+		resizeMapDiv();
 
 		var elem = document.getElementsByClassName("nav1-li");
 		document.getElementById("nav1").style.top = "0px";

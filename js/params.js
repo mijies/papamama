@@ -12,10 +12,7 @@ var moveToList = [];
 var bing_api_key = 'Ahs7qRRd1eAtwgE7igbe7DOnXYvq_Pg81foKgM727r3S1949_mj8hrsqIY4iAxW9';
 
 // 保育施設JSON格納用オブジェクト	
-var nurseryFacilities = {};
-
-// 保育施設のGeoJson読み込みのキャッシュ
-var facilityCache;
+var nurseryFacilities;
 
 // デフォルトのマップサーバ
 var initialMapServer = 'bing-road';
