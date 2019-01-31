@@ -14,7 +14,7 @@ var featureStyleList = {
 };
 
 // 各施設のスタイル設定関数を返すクロージャ
-function StyleFuncFactory(type) {
+function StyleFunctionFactory(type) {
 	return function(feature, resolution){
 		if (feature.get('Type') !== type) return [];
 		return nurseryStyleFunction(

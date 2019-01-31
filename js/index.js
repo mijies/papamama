@@ -319,7 +319,7 @@ $('#mainPage').on('pageshow', function() {
 			// 地図マーカーラベル設定
 			$('#center_markerTitle').html("");
 			var markerTitle = new ol.Overlay({
-				position: coordinate,
+				position: map.getView().getCenter(),
 				element: $('#center_markerTitle')
 			});
 			map.addOverlay(markerTitle);
