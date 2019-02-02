@@ -2,32 +2,19 @@
 // urlでクエリが渡されていれば実行
 if(location.search) {
 
-  // 条件作成処理
-  var typeObj = {
-		pubNinka: '公立認可保育所',
-		priNinka: '私立認可保育所',
-		ninkagai: '認可外保育施設',
-		yhoiku: '横浜保育室',
-		kindergarten: '幼稚園',
-		jigyosho: '小規模・事業所内保育事業',
-    disability: '障害児通所支援事業'
-  };
-  
-  var checkObj = {};
-  Object.keys(typeObj).forEach(function(elem){
-    checkObj[elem] = false;
+	// 保育施設の読み込みとレイヤーの追加
+	Papamamap.prototype.loadNurseryFacilitiesJson(function(data){
+		nurseryFacilities = data;
+	})
+  .then(function(){        // 検索条件のテキストと検索結果の一覧Tableを作成
+    createFilteredList();
+  }, function(error) {     // 非同期処理がエラーで終了した場合
+    document.getElementById("filterCondition").textContent = '検索結果の取得に失敗しました。';
   });
 
-  var filterObj = {
-		OpenTime: '開園',
-		CloseTime: '終園',
-		H24: '24時間',
-		IchijiHoiku: '一時保育',
-		Yakan: '夜間',
-		Kyujitu: '休日',
-    Encho: '延長保育'
-	};
+  //// 以下、非同期処理中に実行させる
 
+  // 新規タブのURLクエリより条件をパース
   var conditions = {};
   location.search
     .substr(1)
@@ -39,66 +26,39 @@ if(location.search) {
          });
      });
 
-  // 保育施設JSON格納用オブジェクト	
-  var nurseryFacilities = {};
-
-	// 保育施設の読み込みとレイヤーの追加
-	Papamamap.prototype.loadNurseryFacilitiesJson(function(data){
-		nurseryFacilities = data;
-	})
-  .then(function(){
-      // 検索条件のテキストと検索結果の一覧Tableを作成
-      createFilteredList();
-  }, function(error) {
-    // 非同期処理がエラーで終了した場合
-    document.getElementById("filterCondition").textContent = '検索結果の取得に失敗しました。';
-  });
-}
-
-
-function createFilteredList () {
-  var filter = new FacilityFilter();
-  ga_label = 0; // 定義のみで使用されない
-  var newGeoJson = filter.getFilteredFeaturesGeoJson({conditions, checkObj, ga_label}, nurseryFacilities); // checkObjを参照渡しで表示レイヤーを取得する
-
-  var typeArr = [];
-  Object.keys(checkObj).forEach(function(item){
-    if(checkObj[item] && typeObj[item]) {
-      typeArr.push(typeObj[item]);
-    }
+  var checkObj = {};
+  Object.keys(facilityObj).forEach(function(elem){
+    checkObj[elem] = false;
   });
 
+  // コンテンツの作成
   var table = document.createElement('table');
   table.classList.add('table');
   var thead = document.createElement('thead');
   var tbody = document.createElement('tbody');
 
   // 検索結果一覧のtheadを作成
-  createThead(thead,
-  {
-    Type: '施設名(区分)',
-    Name: '',
-    Open: '開園/終園',
-    Close:'',
-    AgeS :'対象年齢',
-    AgeE :'',
-    Temp: '対応',
-    Extra:'',
-    Holiday:'',
-    Night:'',
-    H24  :'',
-    Memo: '備考',
-    Add1: '情報',
-    Add2: '',
-    TEL : '',
-    FAX : '',
-    url : ''
+  createThead(thead);
+
+}
+
+
+function createFilteredList () {
+
+  var filter = new FacilityFilter();
+  ga_label = 0; // 定義のみで使用されない
+  var features = filter.getFilteredFeaturesGeoJson( // checkObjを参照渡しで表示レイヤーを取得する
+        {conditions, checkObj, ga_label},
+        nurseryFacilities
+  ).features;
+
+  var trueType = Object.keys(checkObj).map(function(elem){
+    if (checkObj[elem] ) return facilityObj[elem].type;
   });
 
   // 検索結果一覧のtbodyを作成
-  var features = newGeoJson.features;
   Object.keys(features).forEach(function(item) {
-    typeArr.forEach(function(type) {
+    trueType.forEach(function(type) {
       if(features[item].properties.Type === type) {
         createTbody(tbody, features[item].properties);
       }
@@ -113,39 +73,25 @@ function createFilteredList () {
 
   // 絞り込み条件のテキスト生成
   createFilterText();
-
 }
 
 // 検索結果のTable theadを作成する関数
-function createThead(parent, p) {
+function createThead(parent) {
 
-  var elem = 'th';
   var tr = document.createElement('tr');
 
-  // 施設名、施設区分
-  var type = document.createElement(elem);
-  type.textContent = p.Type;
-  tr.appendChild(type);
-  // 開園、終園時間
-  var time = document.createElement(elem);
-  time.textContent = p.Open;
-  tr.appendChild(time);
-  // 対象年齢
-  var age = document.createElement(elem);
-  age.textContent = p.AgeS;
-  tr.appendChild(age);
-  // 一時保育、延長保育、夜間、24時間をひとくくり
-  var service = document.createElement(elem);
-  service.textContent = p.Temp;
-  tr.appendChild(service);
-  // 備考
-  var memo = document.createElement(elem);
-  memo.textContent = p.Memo;
-  tr.appendChild(memo);
-  // 住所、TEL、FAX、urlをひとくくり
-  var info = document.createElement(elem);
-  info.textContent = p.Add1;
-  tr.appendChild(info);
+  [
+    '施設名(区分)',
+    '開園/終園',
+    '対象年齢',
+    '対応',
+    '備考',
+    '情報',
+  ].forEach(function(elem){
+    var th = document.createElement('th');
+    th.textContent = elem;
+    tr.appendChild(th);
+  });
 
   // theadにtrを追加
   parent.appendChild(tr);
@@ -248,18 +194,18 @@ function createTbody(parent, p) {
 
 // 絞り込み条件のテキスト生成
 function createFilterText() {
+  
   var textObj = {};
-  var filterText = '絞り込み条件 : ';
-  Object.keys(typeObj).forEach(function(type){
+  Object.keys(facilityObj).forEach(function(type){
     Object.keys(filterObj).forEach(function(filter){
-      if(conditions[type+filter]) {
-        if(textObj[typeObj[type]]) {
-          textObj[typeObj[type]] += ('、' + filterObj[filter]);
+      if(conditions[type+filter]) {  // １つの施設に複数の条件が指定されてる場合
+        if(textObj[facilityObj[type].type]) {
+          textObj[facilityObj[type].type] += ('、' + filterObj[filter]);
         } else {
-          textObj[typeObj[type]] = filterObj[filter];
+          textObj[facilityObj[type].type] = filterObj[filter];
         }
         if(filter === 'OpenTime' || filter === 'CloseTime') {
-          textObj[typeObj[type]] += conditions[type+filter];
+          textObj[facilityObj[type].type] += conditions[type+filter];
         }
       }
     });
@@ -268,9 +214,10 @@ function createFilterText() {
   document.getElementById("filterCondition").textContent = '絞り込み条件 : ';
   document.getElementById("filterCondition").appendChild(document.createElement('br'));
 
-  Object.keys(textObj).forEach(function(text){
+  // " - 施設名 (条件)"のテキスト生成
+  Object.keys(textObj).forEach(function(type){
     var elem_span = document.createElement('span');
-    elem_span.textContent = ' - ' +text + ' (' + textObj[text] + ')';
+    elem_span.textContent = ' - ' + type + ' (' + textObj[type] + ')';
     document.getElementById("filterCondition").appendChild(elem_span);
     document.getElementById("filterCondition").appendChild(document.createElement('br'));
   });

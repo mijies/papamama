@@ -111,3 +111,13 @@ var cdSchoolArray = [
 	'#cbMiddleSchool',
 	'#cbElementarySchool'
 ];
+
+var filterObj = {
+	OpenTime: '開園',
+	CloseTime: '終園',
+	H24: '24時間',
+	IchijiHoiku: '一時保育',
+	Yakan: '夜間',
+	Kyujitu: '休日',
+	Encho: '延長保育'
+};
