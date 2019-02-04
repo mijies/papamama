@@ -1,4 +1,63 @@
 
+// マップサーバ一覧
+var mapServerList = {
+	'bing-road': {
+		label: "標準(Bing)",
+		source_type: "bing",
+		source: new ol.source.BingMaps({
+			culture: 'ja-jp',
+			key: bing_api_key,
+			imagerySet: 'Road',
+		})
+	},
+	'mierune-mono': {
+		label: "白地図",
+		source_type: "xyz",
+		source: new ol.source.XYZ({
+			attributions: [
+				new ol.Attribution({
+					html: "Maptiles by MIERUNE, under CC BY. Data by OpenStreetMap contributors, under ODbL."
+				})
+			],
+			url: "https://tile.mierune.co.jp/mierune_mono/{z}/{x}/{y}.png",
+			projection: "EPSG:3857"
+		})
+	},
+	"cyberjapn-pale": {
+		label: "国土地理院",
+		source_type: "xyz",
+		source: new ol.source.XYZ({
+			attributions: [
+				new ol.Attribution({
+					html: "<a href='http://portal.cyberjapan.jp/help/termsofuse.html' target='_blank'>国土地理院</a>"
+				})
+			],
+			url: "http://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png",
+			projection: "EPSG:3857"
+		})
+	},
+	'osm': {
+		label: "交通",
+		source_type: "osm",
+		source: new ol.source.OSM({
+			url: "http://{a-c}.tile.thunderforest.com/transport/{z}/{x}/{y}.png",
+			attributions: [
+				ol.source.OSM.DATA_ATTRIBUTION,
+				new ol.Attribution({html: "Tiles courtesy of <a href='http://www.thunderforest.com/' target='_blank'>Andy Allan</a>"})
+			]
+		})
+	},
+	'bing-aerial': {
+		label: "写真",
+		source_type: "bing",
+		source: new ol.source.BingMaps({
+			culture: 'ja-jp',
+			key: bing_api_key,
+			imagerySet: 'Aerial',
+		})
+	}
+};
+
 $('#mainPage').on('pageshow', function() {
 	resizeMapDiv();
 
@@ -382,75 +441,16 @@ $('#mainPage').on('pageshow', function() {
 		}
 	});
 
-	// メニューバーとロゴをWindowサイズに合わせて配置を変更する
-	function toggleNavbar() {
-
-		// // マップのサイズを画面サイズに調整
-		resizeMapDiv();
-
-		var elem = document.getElementsByClassName("nav1-li");
-		document.getElementById("nav1").style.top = "0px";
-		document.getElementById("nav1").style.left = "50px";
-
-		Object.keys(elem[0].children).forEach(function(item){
-			elem[0].children[item].style.width = "";
-		});
-		["btnFilter", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(evt) {
-			document.getElementById(evt).style.width = "";
-		});
-
-		elem[0].style.display ="inline-block";
-		elem[1].style.display ="inline-block";
-
-		var btn = document.getElementById("nav1-btn-div");
-		btn.style.display = "none";
-
-		var logo = document.getElementById("map-logo");
-		logo.style.left = window.innerWidth / 2 - 115 + "px";
-
-		// Windowサイズがメニューの幅より小さい場合(つまりメニューが複数行となる場合)
-		if (elem[0].clientHeight > 50) {
-			elem[0].style.display ="none";
-			elem[1].style.display ="none";
-			btn.style.display = "block";
-			logo.style.top = "0";
-			logo.style.height = "0";
-			logo.style.bottom = "";
-
-			Object.keys(elem[0].children).forEach(function(i){
-				elem[0].children[i].style.width =  (window.innerWidth / 3 * 1) + "px";
-			});
-			["btnFilter", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(e) {
-				document.getElementById(e).style.width = (window.innerWidth / 3 * 1) + "px";
-			});
-
-			document.getElementById("nav1").style.top = (btn.clientHeight - 5) + "px";
-			if (window.innerHeight > 580) {
-					document.getElementById("nav1").style.left = (window.innerWidth / 3 * 2 - 5) + "px";
-			} else {
-					document.getElementById("nav1").style.left = (window.innerWidth / 3 * 1 - 5) + "px";
-			}
-
-		// Windowサイズがメニューの幅より大きい場合
-		} else {
-			elem[0].style.display ="inline-block";
-			elem[1].style.display ="inline-block";
-			btn.style.display = "none";
-			logo.style.top = "";
-			logo.style.bottom = "30px";
-		}
-	};
-	// ページのロード時に一度実行する
-	toggleNavbar();
-
 	// Windowsサイズの変更時のイベントを登録
 	var resizeTimer;
 	window.addEventListener('resize', function(event){
-	if (resizeTimer !== false) {
-		clearTimeout(resizeTimer);
-	}
-	resizeTimer = setTimeout(toggleNavbar, 100);
+		if (resizeTimer !== false) {
+			clearTimeout(resizeTimer);
+		}
+		resizeTimer = setTimeout(toggleNavbar, 100);
 	});
+	// ページのロード時に一度実行する
+	toggleNavbar();
 
 });
 
