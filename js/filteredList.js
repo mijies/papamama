@@ -14,8 +14,7 @@ if(location.search) {
 
   //// 以下、非同期処理中に実行させる
 
-  // 新規タブのURLクエリより条件をパース
-  var conditions = {};
+  var conditions = {}; // 新規タブのURLクエリより条件をパース
   location.search
     .substr(1)
     .split('&')
@@ -31,52 +30,18 @@ if(location.search) {
     checkObj[elem] = false;
   });
 
-  // コンテンツの作成
-  var table = document.createElement('table');
-  table.classList.add('table');
-  var thead = document.createElement('thead');
-  var tbody = document.createElement('tbody');
-
-  // 検索結果一覧のtheadを作成
-  createThead(thead);
-
+  contentFactory = new ContentFactory(); // コンテンツの作成
 }
 
+// コンストラクタ
+function ContentFactory(){
+  this.table = document.createElement('table');
+  this.table.classList.add('table');
+  this.thead = document.createElement('thead');
+  this.tbody = document.createElement('tbody');
+};
 
-function createFilteredList () {
-
-  var filter = new FacilityFilter();
-  ga_label = 0; // 定義のみで使用されない
-  var features = filter.getFilteredFeaturesGeoJson( // checkObjを参照渡しで表示レイヤーを取得する
-        {conditions, checkObj, ga_label},
-        nurseryFacilities
-  ).features;
-
-  var trueType = Object.keys(checkObj).map(function(elem){
-    if (checkObj[elem] ) return facilityObj[elem].type;
-  });
-
-  // 検索結果一覧のtbodyを作成
-  Object.keys(features).forEach(function(item) {
-    trueType.forEach(function(type) {
-      if(features[item].properties.Type === type) {
-        createTbody(tbody, features[item].properties);
-      }
-    });
-  });
-
-  // Tableの各Nodeを連結してからdiv'filteredList'と紐づけ
-  table.appendChild(thead);
-  table.appendChild(tbody);
-  document.getElementById("filteredList").appendChild(table);
-  document.getElementById("filteredList").classList.add('table-responsive');
-
-  // 絞り込み条件のテキスト生成
-  createFilterText();
-}
-
-// 検索結果のTable theadを作成する関数
-function createThead(parent) {
+ContentFactory.prototype.createThead = function(){
 
   var tr = document.createElement('tr');
 
@@ -93,103 +58,100 @@ function createThead(parent) {
     tr.appendChild(th);
   });
 
-  // theadにtrを追加
-  parent.appendChild(tr);
-}
+  this.thead.appendChild(tr);
+};
 
-// 検索結果のTable tbodyを作成する関数
-function createTbody(parent, p) {
+ContentFactory.prototype.createTbody = function(p){
 
-  var elem = 'td';
   var tr = document.createElement('tr');
 
-  // 施設名、施設区分
-  var type = document.createElement(elem);
-  var ul_name  = document.createElement('ul');
-  var li_name  = document.createElement('li');
-  li_name.textContent = p.Name;
-  ul_name.appendChild(li_name);
-  var ul_type  = document.createElement('ul');
-  var li_type  = document.createElement('li');
-  li_type.textContent = '(' + p.Type + ')';
-  ul_name.appendChild(li_type);
-  type.appendChild(ul_name);
-  tr.appendChild(type);
+  var addContent = function(data){
+    var td = document.createElement('td');
+    typeof data === 'string'     // 引数が文字列かDOM要素(object)か判定
+    ? td.textContent = data
+    : td.appendChild(data);
+    tr.appendChild(td);
+  };
 
-  // 開園、終園時間
-  var open = document.createElement(elem);
-  open.textContent = p.Open + ' ~ ' + p.Close;
-  tr.appendChild(open);
+  var addListContent = function(args){
+    var ul = document.createElement('ul');
+    args.forEach(function(data){
+      var li = document.createElement('li');
+      typeof data === 'string'     // 引数が文字列かDOM要素(object)か判定
+      ? li.textContent = data
+      : li.appendChild(data);
+      ul.appendChild(li);
+    });
+    addContent(ul);
+  };
 
-  // 対象年齢
-  var age = document.createElement(elem);
-  age.textContent = p.AgeS + ' ~ ' + p.AgeE;
-  tr.appendChild(age);
+  addListContent([p.Name, '(' + p.Type + ')']); // 施設名、施設区分
+  addContent(p.Open + ' ~ ' + p.Close);         // 開園、終園時間
+  addContent(p.AgeS + ' ~ ' + p.AgeE);          // 対象年齢
 
-  // 一時保育、延長保育、夜間、24時間をひとくくり
-  var service = document.createElement(elem);
-  var ul_service  = document.createElement('ul');
-  if(p.Temp) {
-    var li_temp  = document.createElement('li');
-    li_temp.textContent = '一時保育';
-    ul_service.appendChild(li_temp);
-  }
-  if(p.Extra) {
-    var li_extra  = document.createElement('li');
-    li_extra.textContent = '延長保育';
-    ul_service.appendChild(li_extra);
-  }
-  if(p.Night) {
-    var li_night  = document.createElement('li');
-    li_night.textContent = '夜間';
-    ul_service.appendChild(li_night);
-  }
-  if(p.H24) {
-    var li_h24  = document.createElement('li');
-    li_h24.textContent = '24時間';
-    ul_service.appendChild(li_h24);
-  }
-  service.appendChild(ul_service);
-  tr.appendChild(service);
+  services = [];      // 一時保育、延長保育、夜間、24時間をひとくくり
+  if(p.Temp) services.push('一時保育');
+  if(p.Extra) services.push('延長保育');
+  if(p.Night) services.push('夜間');
+  if(p.H24) services.push('24時間');
+  addListContent(services);
 
-  // 備考
-  var memo = document.createElement(elem);
-  memo.textContent = p.Memo;
-  tr.appendChild(memo);
+  addContent(p.Memo);  // 備考
 
-  // 住所、TEL、FAX、urlをひとくくり
-  var info = document.createElement(elem);
-  var ul_info  = document.createElement('ul');
-  if(p.Add1) {
-    var li_add  = document.createElement('li');
-    li_add.textContent = p.Add1 + ' ' + p.Add2;
-    ul_info.appendChild(li_add);
-  }
-  var li_tel  = document.createElement('li');
-  if(p.TEL) {
-    li_tel.textContent = 'TEL ' + p.TEL;
-
-  }
-  if(p.FAX) {
-    li_tel.textContent = li_tel.textContent + ' / FAX ' + p.FAX;
-  }
-  if(p.TEL || p.FAX) {
-    ul_info.appendChild(li_tel);
+  info = [];           // 住所、TEL、FAX、urlをひとくくり
+  if(p.Add1) info.push(p.Add1 + ' ' + p.Add2);
+  if(p.TEL && p.FAX) {
+    info.push('TEL ' + p.TEL + ' / FAX ' + p.FAX);
+  } else if(p.TEL && !(p.FAX)) {
+    info.push('TEL ' + p.TEL);
+  } else if(!(p.TEL) && p.FAX) {
+    info.push('FAX ' + p.FAX);
   }
   if(p.url) {
-    var li_url = document.createElement('li');
-    var a_url = document.createElement('a');
-    a_url.setAttribute('href', p.url);
-    a_url.setAttribute('target','_blank');
-    a_url.textContent = '施設のWebサイトを開く';
-    li_url.appendChild(a_url);
-    ul_info.appendChild(li_url);
+    var aTag = document.createElement('a');
+    aTag.setAttribute('href', p.url);
+    aTag.setAttribute('target','_blank');
+    aTag.textContent = '施設のWebサイトを開く';
+    info.push(aTag);
   }
-  info.appendChild(ul_info);
-  tr.appendChild(info);
+  addListContent(info);
 
-  // tbodyにtrを追加
-  parent.appendChild(tr);
+  this.tbody.appendChild(tr);
+};
+
+ContentFactory.prototype.renderContent = function(p){
+    this.table.appendChild(this.thead);
+    this.table.appendChild(this.tbody);
+    document.getElementById("filteredList").appendChild(this.table);
+    document.getElementById("filteredList").classList.add('table-responsive');
+};
+
+function createFilteredList () {
+
+  var filter = new FacilityFilter();
+  ga_label = 0; // 定義のみで使用されない
+  var features = filter.getFilteredFeaturesGeoJson( // checkObjを参照渡しで表示レイヤーを取得する
+        {conditions, checkObj, ga_label},
+        nurseryFacilities
+  ).features;
+
+  var trueType = Object.keys(checkObj).map(function(elem){
+    if (checkObj[elem] ) return facilityObj[elem].type;
+  });
+
+  contentFactory.createThead();　// 検索結果一覧のtheadを作成
+
+  Object.keys(features).forEach(function(item) {　// 検索結果一覧のtbodyを作成
+    trueType.forEach(function(type) {
+      if(features[item].properties.Type === type) {
+        contentFactory.createTbody(features[item].properties);
+      }
+    });
+  });
+
+  contentFactory.renderContent();　// Tableの各Nodeを連結してからdiv'filteredList'と紐づけ
+  
+  createFilterText();              // 絞り込み条件のテキスト生成
 }
 
 // 絞り込み条件のテキスト生成
@@ -214,8 +176,7 @@ function createFilterText() {
   document.getElementById("filterCondition").textContent = '絞り込み条件 : ';
   document.getElementById("filterCondition").appendChild(document.createElement('br'));
 
-  // " - 施設名 (条件)"のテキスト生成
-  Object.keys(textObj).forEach(function(type){
+  Object.keys(textObj).forEach(function(type){    // " - 施設名 (条件)"のテキスト生成
     var elem_span = document.createElement('span');
     elem_span.textContent = ' - ' + type + ' (' + textObj[type] + ')';
     document.getElementById("filterCondition").appendChild(elem_span);
