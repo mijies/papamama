@@ -1,24 +1,29 @@
 /**
- * コンストラクタ
- *
- * @param ol.Map map OpenLayers3 map object
+ * Papamamap :
+ *   コンストラクタであり、index.jsの$('#mainPage').onでnewされる
+ * 
+ * @property {object}         map ol.Map
+ * @property {Array.<number>} viewCenter マップの初期中心座標
+ * @property {number}         centerLatOffsetPixel 緯度表示位置の調整用オフセット
  *
  */
-window.Papamamap = function() {
-    this.map = null;
+window.Papamamap = function(init_center_coords, mapServer) {
+    this.map;
+    this.popup;
+    this.viewCenter = init_center_coords;
     this.centerLatOffsetPixel = 75;
-    this.viewCenter = [];
+    this.generate(mapServer);
 };
 
 /**
  * マップを作成して保持する
  *
- * @param  {[type]} mapServerListItem [description]
- * @return {[type]}                   [description]
+ * @param  {object} mapServerListItem マップサーバのオブジェクト
  */
 Papamamap.prototype.generate = function(mapServerListItem)
 {
     this.map = new ol.Map({
+        target: 'map', // index.htmlの#map
         layers: [
             new ol.layer.Tile({
                 opacity: 1.0,
@@ -81,7 +86,6 @@ Papamamap.prototype.generate = function(mapServerListItem)
                  visible: true
             }),
         ],
-        target: 'map',
         view: new ol.View({
             center: ol.proj.transform(this.viewCenter, 'EPSG:4326', 'EPSG:3857'),
             zoom: 13,
@@ -98,30 +102,23 @@ Papamamap.prototype.generate = function(mapServerListItem)
     });
 };
 
-/**
- * レイヤー名を取得する
- * @param  {[type]} cbName [description]
- * @return {[type]}        [description]
- */
-Papamamap.prototype.getLayerName = function(name)
+// 指定した名称のレイヤーの表示・非表示を切り替える
+Papamamap.prototype.switchLayer = function(layerName, visible)
 {
-    return 'layer' + name;
-};
-
-/**
- * 指定した名称のレイヤーの表示・非表示を切り替える
- * @param  {[type]} layerName [description]
- * @param  {[type]} visible   [description]
- * @return {[type]}           [description]
- */
-Papamamap.prototype.switchLayer = function(layerName, visible) {
     // layerNameはcheckboxのid属性から取得しているため先頭の"cb"を取り除く
     var _layerName = this.getLayerName(layerName.substr(2));
+
     this.map.getLayers().forEach(function(layer) {
         if (layer.get('name') == _layerName) {
             layer.setVisible(visible);
         }
     });
+};
+
+// レイヤー名を取得する
+Papamamap.prototype.getLayerName = function(name)
+{
+    return 'layer' + name.slice(0,1).toUpperCase() + name.slice(1);
 };
 
 /**
@@ -130,9 +127,9 @@ Papamamap.prototype.switchLayer = function(layerName, visible) {
  * 座標参照系が変換済みの値を使うには false,
  * 変換前の値を使うには true を指定
  */
-Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
-{
-    // グローバル変数 map から view を取得する
+Papamamap.prototype.animatedMove = function(lon, lat, isTransform) {
+
+    // map から view を取得する
     view = this.map.getView();
     var pan = ol.animation.pan({
         duration: 850,
@@ -154,101 +151,28 @@ Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
 };
 
 
-/**
- * 指定したgeojsonデータを元に公立認可・私立認可・小規模等・横浜保育室・認可外・幼稚園レイヤーを描写する
- *    ※上記以外に描写レイヤーを追加する時は、下の this.map.removeLayer(this.map.getLayers().item(4)); も追加レイヤーの数だけ追加してください！
- *
- * @param {[type]} facilitiesData [description]
- */
+// facilityObjの施設分のレイヤーを追加する
 Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
 {
-    if(this.map.getLayers().getLength() >= 4) {
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
+    // Papamamap.prototype.generate()のnew ol.Map()の
+    // 初期化で追加したレイヤー以外は削除する。
+    while (this.map.getLayers().getLength() > 4) {
         this.map.removeLayer(this.map.getLayers().item(4));
     }
 
-    // 幼稚園
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerKindergarten',
-            style: kindergartenStyleFunction
-        })
-    );
-    // 認可外
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerNinkagai',
-            style: ninkagaiStyleFunction
-        })
-    );
-    // 私立認可
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerPriNinka',
-            style: priNinkaStyleFunction
-        })
-    );
-    // 公立認可
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerPubNinka',
-            style: pubNinkaStyleFunction
-        })
-    );
-    // 横浜保育室
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerYhoiku',
-            style: yhoikuStyleFunction
-        })
-    );
-    // 小規模・事業所内保育事業
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerJigyosho',
-            style: jigyoshoStyleFunction
-        })
-    );
-    // 障害児通所支援事業
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerDisability',
-            style: disabilityStyleFunction
-        })
-    );
+    Object.keys(facilityObj).forEach(function(elem){
+        this.map.addLayer(
+            new ol.layer.Vector({
+                source: new ol.source.GeoJSON({
+                    projection: 'EPSG:3857',
+                    object: facilitiesData
+                }),
+                name: Papamamap.prototype.getLayerName(elem),
+                style: StyleFunctionFactory(facilityObj[elem].type)
+                // style: window[elem+'StyleFunction']
+            })
+        );
+    });
 };
 
 /**
@@ -280,21 +204,17 @@ Papamamap.prototype.loadNurseryFacilitiesJson = function(successFunc)
 Papamamap.prototype.changeMapServer = function(mapServerListItem, opacity)
 {
     this.map.removeLayer(this.map.getLayers().item(0));
-    source_type = mapServerListItem.source_type;
-    var layer = null;
-    switch(source_type) {
-        case 'image':
-            layer = new ol.layer.Image({
-                opacity: opacity,
-                source: mapServerListItem.source
-            });
-            break;
-        default:
-            layer = new ol.layer.Tile({
-                opacity: opacity,
-                source: mapServerListItem.source
-            });
-            break;
+    var layer;
+    if(mapServerListItem.source_type === 'image') {
+        layer = new ol.layer.Image({
+            opacity: opacity,
+            source: mapServerListItem.source
+        });
+    } else {
+        layer = new ol.layer.Tile({
+            opacity: opacity,
+            source: mapServerListItem.source
+        });
     }
     this.map.getLayers().insertAt(0, layer);
 };
@@ -306,7 +226,7 @@ Papamamap.prototype.changeMapServer = function(mapServerListItem, opacity)
  */
 Papamamap.prototype.getLayer = function(layerName)
 {
-    result = null;
+    var result;
     this.map.getLayers().forEach(function(layer) {
         if (layer.get('name') == layerName) {
             result = layer;
@@ -326,38 +246,33 @@ Papamamap.prototype.moveToSelectItem = function(mapServerListItem)
 {
     if(mapServerListItem.coordinates !== undefined) {
         // 区の境界線に合わせて画面表示
-        components = [];
-        for(var i=0; i<mapServerListItem.coordinates.length; i++) {
-            coord = mapServerListItem.coordinates[i];
-            pt2coo = ol.proj.transform(coord, 'EPSG:4326', 'EPSG:3857');
-            components.push(pt2coo);
-        }
-        components = [components];
+        var components = mapServerListItem.coordinates.map(function(elem){
+            ol.proj.transform(elem, 'EPSG:4326', 'EPSG:3857');
+        });
 
-        view = this.map.getView();
-        polygon = new ol.geom.Polygon(components);
-        size =  this.map.getSize();
+        var polygon = new ol.geom.Polygon([components]);
+        var size =  this.map.getSize();
+        var view = this.map.getView();
+
         var pan = ol.animation.pan({
             duration: 850,
             source: view.getCenter()
         });
         this.map.beforeRender(pan);
 
-        feature = new ol.Feature({
+        var feature = new ol.Feature({
             name: mapServerListItem.name,
             geometry: polygon
         });
-        layer = this.getLayer(this.getLayerName("Circle"));
-        source = layer.getSource();
+        // if文でtrueは呼ばれることはないようで、以下のコードが問題ないか未確認
+        var source = this.getLayer(this.getLayerName("Circle")).getSource()
         source.clear();
         source.addFeature(feature);
 
         view.fitGeometry(
             polygon,
             size,
-            {
-                constrainResolution: false
-            }
+            {constrainResolution: false}
         );
     } else {
         // 選択座標に移動
@@ -414,8 +329,6 @@ Papamamap.prototype.getPopupContent = function(feature)
         }
     };
 
-    var type = feature.get('Type');
-
     var open  = feature.get('Open');
     var close = feature.get('Close');
     if (!isUndefined(open) && !isUndefined(close)) {
@@ -424,6 +337,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: open + '〜' + close
         });
     }
+
     var memo = feature.get('Memo');
     if (!isUndefined(memo)) {
         contentFactory.addContent({
@@ -432,6 +346,7 @@ Papamamap.prototype.getPopupContent = function(feature)
         });
     }    
 
+    // ヘッダー非使用のコンテンツ
     var items = "";
     [
         temp    = feature.get('Temp') ? '一時保育 ' : "",
@@ -461,6 +376,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: ageS + '〜' + ageE
         });
     }
+
     var full = feature.get('Full');
     if (!isUndefined(full)) {
         contentFactory.addContent({
@@ -468,6 +384,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: full
         });
     }
+
     var tel = feature.get('TEL');
     if (!isUndefined(tel)) {
         contentFactory.addContent({
@@ -475,6 +392,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: tel
         });
     }
+
     var fax = feature.get('FAX');
     if (!isUndefined(fax)) {
         contentFactory.addContent({
@@ -482,14 +400,15 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: fax
         });
     }
-    var add1 = feature.get('Add1');
-    var add2 = feature.get('Add2');
-    if (!isUndefined(add1) || !isUndefined(add2)) {
+
+    var add = feature.get('Add1') + feature.get('Add2');
+    if (!isUndefined(add)) {
         contentFactory.addContent({
             th: '住所',
-            td: add1 + add2
+            td: add
         });
     }
+
     var owner = feature.get('Owner');
     if (!isUndefined(owner)) {
         contentFactory.addContent({
@@ -497,6 +416,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: owner
         });
     }
+
     var foundation = feature.get('設立年度');
     if (!isUndefined(foundation)) {
         contentFactory.addContent({
@@ -516,6 +436,7 @@ Papamamap.prototype.getPopupContent = function(feature)
         //     content += '</tr>';
         // }
     }
+
     var pre = feature.get('プレ幼稚園');
     if (!isUndefined(pre)) {
         contentFactory.addContent({
@@ -523,6 +444,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: (pre === "Y") ? "あり" : "なし" 
         });
     }
+
     var bus = feature.get('園バス');
     if (!isUndefined(bus)) {
         contentFactory.addContent({
@@ -530,6 +452,7 @@ Papamamap.prototype.getPopupContent = function(feature)
             td: (bus === "Y") ? "あり" : "なし" 
         });
     }
+
     var lunch = feature.get('給食');
     if (!isUndefined(lunch)) {
         contentFactory.addContent({
@@ -549,11 +472,8 @@ Papamamap.prototype.getPopupContent = function(feature)
 * @return {[type]}
 **/
 function formatNull(param){
-  if(param == null || param == undefined || param ==""){
-    return null;
-  } else {
-    return param;
-  }
+  return (param == null || param == undefined || param =="")
+  ? null : param;
 }
 
 /**
@@ -563,11 +483,8 @@ function formatNull(param){
 * @return {[type]}
 **/
 function isUndefined(param){
-  if(param == null || param == undefined || param ==""){
-    return true;
-  } else {
-    return false;
-  }
+  return (param == null || param == undefined || param =="")
+  ? true : false;
 }
 
 /* 日付の差を求める関数*/
@@ -588,9 +505,9 @@ function compareDate(year1, month1, day1, year2, month2, day2) {
  */
 Papamamap.prototype.clearCenterCircle = function()
 {
-    var layer = this.getLayer(this.getLayerName("Circle"));
-    var source = layer.getSource();
-    source.clear();
+    this.getLayer(this.getLayerName("Circle"))
+        .getSource()
+        .clear()
 };
 
 /**
@@ -602,29 +519,21 @@ Papamamap.prototype.clearCenterCircle = function()
  */
 Papamamap.prototype.drawCenterCircle = function(radius, moveToPixel)
 {
-    if(moveToPixel === undefined || moveToPixel === null) {
-        moveToPixel = 0;
-    }
-    if(radius === "") {
-        radius = 500;
-    }
+
+    moveToPixel　= moveToPixel || 0;
+    radius = Math.floor((radius || 500)); // 選択した半径の同心円を描く
 
     // 円を消す
     this.clearCenterCircle();
 
-    view  = this.map.getView();
-    coordinate = view.getCenter();
+    var coordinate = this.map.getView().getCenter();
     if(moveToPixel > 0) {
         var pixel = map.getPixelFromCoordinate(coordinate);
         pixel[1] = pixel[1] + moveToPixel;
         coordinate = map.getCoordinateFromPixel(pixel);
     }
-    // circleFeatures = drawConcentricCircle(coord, radius);
 
-    // 選択した半径の同心円を描く
-    radius = Math.floor(radius);
-
-    circleFeatures = [];
+    
     // 中心部の円を描く
     var sphere = new ol.Sphere(6378137); // ol.Sphere.WGS84 ol.js には含まれてない
     coordinate = ol.proj.transform(coordinate, 'EPSG:3857', 'EPSG:4326');
@@ -635,28 +544,27 @@ Papamamap.prototype.drawCenterCircle = function(radius, moveToPixel)
     circleFeature = new ol.Feature({
         geometry: geoCircle
     });
-    circleFeatures.push(circleFeature);
+    this.getLayer(this.getLayerName("Circle"))
+        .getSource()
+        .addFeatures([circleFeature]);
 
     // 大きい円に合わせて extent を設定
-    extent = geoCircle.getExtent();
-    view   = this.map.getView();
-    sizes  = this.map.getSize();
-    size   = (sizes[0] < sizes[1]) ? sizes[0] : sizes[1];
-    view.fitExtent(extent, [size, size]);
+    var extent = geoCircle.getExtent();
+    var sizes  = this.map.getSize();
+    var size   = (sizes[0] < sizes[1]) ? sizes[0] : sizes[1];
+    this.map.getView().fitExtent(
+        extent,
+        [size, size]
+    );
 
     // 円の内部に施設が含まれるかチェック
-    _features = nurseryFacilities.features.filter(function(item,idx){
-        coordinate = ol.proj.transform(item.geometry.coordinates, 'EPSG:4326', 'EPSG:3857');
+    var _features = nurseryFacilities.features.filter(function(item,idx){
+        var coordinate = ol.proj.transform(item.geometry.coordinates, 'EPSG:4326', 'EPSG:3857');
         if(ol.extent.containsCoordinate(extent, coordinate))
             return true;
         });
-    for(var i=0; i < _features.length; i++) {
-        console.log(_features[i].properties['名称']);
-    }
+    _features.forEach(function(elem){
+        console.log(_features[i].properties['Name']);
+    });
     console.log(_features);
-
-    var layer  = this.getLayer(this.getLayerName("Circle"));
-    var source = layer.getSource();
-    source.addFeatures(circleFeatures);
-    return;
 };
