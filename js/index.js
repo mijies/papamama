@@ -301,7 +301,7 @@ $('#mainPage').on('pageshow', function() {
 			papamamap.addNurseryFacilitiesLayer(nurseryFacilities);
 			$('#btnFilter').css('background-color', '#f6f6f6');
 
-			Object.keys(checkObj).forEach(function(item) {
+			Object.keys(facilityObj).forEach(function(item) {
 				filterSet.checkObj[item] = true;
 			});
 		}
