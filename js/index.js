@@ -258,6 +258,7 @@ $('#mainPage').on('pageshow', function() {
 
 		// 条件作成処理
 		var filterSet = {
+			nameKeyword: "",
 			conditions: {},
 			checkObj: {},	// 表示レイヤーの真偽値を取得
 			ga_label: 0 	// Google Analyticsのイベントトラッキングで送信するデフォルト値
@@ -266,6 +267,9 @@ $('#mainPage').on('pageshow', function() {
 		Object.keys(facilityObj).forEach(function(elem){
 			filterSet.checkObj[elem] = false;
 		});
+
+		// 施設名キーワードのテキスト値
+		filterSet.nameKeyword = $('#nameKeyword').val() || "";
 
 		// 検索フィルターのセレクト(filtersbクラス)で選択されたもののみ抽出
 		$('select.filtersb option:selected').each(function(index,item) {
@@ -278,8 +282,7 @@ $('#mainPage').on('pageshow', function() {
 		});
 
 		// フィルター適用時
-		if(Object.keys(filterSet.conditions).length > 0) {
-
+		if(Object.keys(filterSet.conditions).length || filterSet.nameKeyword) {
 			papamamap.addNurseryFacilitiesLayer(
 				FacilityFilter.prototype.getFilteredFeaturesGeoJson(filterSet, nurseryFacilities)
 			);
@@ -288,6 +291,7 @@ $('#mainPage').on('pageshow', function() {
 			// 検索結果の一覧のhtmlを新規タブで表示される。クエリで検索条件を新規Windowへ渡す
 			if (document.getElementById("filteredList").checked) {
 				var urlQuery = '?';
+				urlQuery += 'nameKeyword' + '=' + encodeURI(filterSet.nameKeyword || 'null') + '&';
 				Object.keys(filterSet.conditions).forEach(function(item) {
 					urlQuery += item + '=' + filterSet.conditions[item] + '&';
 				});
@@ -317,6 +321,9 @@ $('#mainPage').on('pageshow', function() {
 
 	// 絞込条件のリセット
 	$('#filterReset').click(function(evt){
+
+		// テキストボックスをリセット
+		$('#nameKeyword').val("");
 
 		// チェックボックスをリセット
 		$(".filtercb").each(function(){
