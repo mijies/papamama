@@ -46,6 +46,10 @@ var facilityObj = {
 	disability: {
 		type: '障害児通所支援事業',
 		cb: '#cbDisability'
+	},
+	gakudou: {
+		type: '学童保育',
+		cb: '#cbGakudou'
 	}
 };
 

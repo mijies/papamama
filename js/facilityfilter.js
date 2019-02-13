@@ -104,7 +104,15 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (filterSet, nurse
       disabilityIchijiHoiku: 2**45,
       disabilityYakan:       2**46,
       disabilityKyujitu:     2**47,
-      disabilityEncho:       2**48
+      disabilityEncho:       2**48,
+
+      gakudouOpenTime:   2**49,
+      gakudouCloseTime:  2**50,
+      gakudouH24:        2**51,
+      gakudouIchijiHoiku: 2**52,
+      gakudouYakan:       2**53,
+      gakudouKyujitu:     2**54,
+      gakudouEncho:       2**55
     });
 
     // DOM上のid属性に使われる文字列とGeoJSONの対応するプロパティのマッピング
