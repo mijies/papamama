@@ -160,7 +160,7 @@ Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
         this.map.removeLayer(this.map.getLayers().item(4));
     }
 
-    Object.keys(facilityObj).forEach(function(elem){
+    Object.keys(facilityObj).reverse().forEach(function(elem){
         this.map.addLayer(
             new ol.layer.Vector({
                 source: new ol.source.GeoJSON({
