@@ -17,33 +17,56 @@ var nurseryFacilities;
 // デフォルトのマップサーバ
 var initialMapServer = 'bing-road';
 
-// 保育施設・幼稚園に関する情報
+// マップ上保育施設のスタイル
+var featureStyleList = {
+	'default': { color: 'rgba(153, 153, 153, 1)', img: 'image/018.png'},
+	'認可外保育施設': { color: '#0362A0', img: 'image/019.png'},
+	'幼稚園': { color: '#FF5C24', img: 'image/029.png'},
+	'私立認可保育所': { color: '#6EE100', img: 'image/018.png'},
+	'公立認可保育所': { color: '#44AA00', img: 'image/018.png'},
+	'横浜保育室': { color: '#0488EE', img: 'image/018.png'},
+	'小規模・事業所内保育事業': { color: '#6DBA9C', img: 'image/018.png'},
+	'障害児通所支援事業': { color: '#f78cb7', img: 'image/029.png'},
+	'学童保育' : { color: '#a16e2b', img: 'image/029.png'}
+};
+
+/**
+ * 保育施設・幼稚園に関する情報 
+ * 
+ *   マップ上の各施設のレイヤーのZ軸はfacilityObj要素の上から最前面となる。
+ *   これはaddNurseryFacilitiesLayerメソッドでreverse()で読み込まれるため。
+ *   おおまかな方針として各施設のレイヤーZ軸は施設数が少ない順ほど全面。
+ */
 var facilityObj = {
-	pubNinka: {
+	pubNinka: {      // 9件(2019/02月時点)
 		type: '公立認可保育所',
 		cb: '#cbPubNinka',
 	},
-	priNinka: {
-		type: '私立認可保育所',
-		cb: '#cbPriNinka'
-	},
-	ninkagai: {
-		type: '認可外保育施設',
-		cb: '#cbNinkagai'
-	},
-	yhoiku: {
+	yhoiku: {        // 20件(2019/02月時点)
 		type: '横浜保育室',
 		cb: '#cbYhoiku'
 	},
-	kindergarten: {
+	kindergarten: {  // 26件(2019/02月時点)
 		type: '幼稚園',
 		cb: '#cbKindergarten'
 	},
-	jigyosho: {
+	ninkagai: {      // 28件(2019/02月時点)
+		type: '認可外保育施設',
+		cb: '#cbNinkagai'
+	},
+	jigyosho: {      // 40件(2019/02月時点)
 		type: '小規模・事業所内保育事業',
 		cb: '#cbJigyosho'
 	},
-	disability: {
+	gakudou: {       // 52件(2019/02月時点)
+		type: '学童保育',
+		cb: '#cbGakudou'
+	},
+	priNinka: {      // 165件(2019/02月時点)
+		type: '私立認可保育所',
+		cb: '#cbPriNinka'
+	},
+	disability: {    // 258件(2019/02月時点)
 		type: '障害児通所支援事業',
 		cb: '#cbDisability'
 	}

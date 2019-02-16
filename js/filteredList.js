@@ -24,6 +24,9 @@ if(location.search) {
           conditions[p] = c;
          });
      });
+  var nameKeyword = decodeURI(conditions.nameKeyword);
+  nameKeyword = nameKeyword !== "null" ? nameKeyword : ""
+  delete conditions.nameKeyword;
 
   var checkObj = {};
   Object.keys(facilityObj).forEach(function(elem){
@@ -130,8 +133,9 @@ function createFilteredList () {
 
   var filter = new FacilityFilter();
   ga_label = 0; // 定義のみで使用されない
+  console.log(nameKeyword);
   var features = filter.getFilteredFeaturesGeoJson( // checkObjを参照渡しで表示レイヤーを取得する
-        {conditions, checkObj, ga_label},
+        {nameKeyword, conditions, checkObj, ga_label},
         nurseryFacilities
   ).features;
 
@@ -173,13 +177,15 @@ function createFilterText() {
     });
   });
 
-  document.getElementById("filterCondition").textContent = '絞り込み条件 : ';
-  document.getElementById("filterCondition").appendChild(document.createElement('br'));
+  var filterCondition = document.getElementById("filterCondition");
+  filterCondition.textContent = '絞り込み条件 : ';
+  filterCondition.appendChild(document.createElement('br'));
 
+  if(nameKeyword) textObj = Object.assign({"施設名キーワード": nameKeyword}, textObj);
   Object.keys(textObj).forEach(function(type){    // " - 施設名 (条件)"のテキスト生成
     var elem_span = document.createElement('span');
     elem_span.textContent = ' - ' + type + ' (' + textObj[type] + ')';
-    document.getElementById("filterCondition").appendChild(elem_span);
-    document.getElementById("filterCondition").appendChild(document.createElement('br'));
+    filterCondition.appendChild(elem_span);
+    filterCondition.appendChild(document.createElement('br'));
   });
 }

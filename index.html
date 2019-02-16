@@ -55,6 +55,9 @@
                     <label for="cbDisability" id="lblDisability">障害児通所支援</label>
                     <input type="checkbox" name="cbDisability" id="cbDisability" checked="checked">
 
+                    <label for="cbGakudou" id="lblGakudou">学童保育</label>
+                    <input type="checkbox" name="cbGakudou" id="cbGakudou" checked="checked">
+
                     <label for="cbKindergarten" id="lblKindergarten">幼</label>
                     <input type="checkbox" name="cbKindergarten" id="cbKindergarten" checked="checked">
 
@@ -109,6 +112,12 @@
             <form>
                 <div style="padding:3px 10px;">
                     <h4><b>保育施設 絞り込み</b></h4>
+                    
+                    <legend>施設名キーワード</legend>
+                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <label for="nameKeyword">施設名キーワード</label>
+                        <input type="text" id="nameKeyword">
+                    </fieldset>
 
                     <legend>公立認可保育園</legend>
                     <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
@@ -234,6 +243,24 @@
                         <input type="checkbox" id="disabilityKyujitu" class="filtercb">
                         <label for="disabilityEncho">延長保育</label>
                         <input type="checkbox" id="disabilityEncho" class="filtercb">
+                    </fieldset>
+
+                    <legend>学童保育</legend>
+                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                        <label for="gakudouOpenTime" class="select">開園</label>
+                        <select id="gakudouOpenTime" class="filtersb"></select>
+                        <label for="gakudouCloseTime" class="select">終園</label>
+                        <select id="gakudouCloseTime" class="filtersb"></select>
+                        <label for="gakudouH24">24時間</label>
+                        <input type="checkbox" id="gakudouH24" class="filtercb">
+                        <label for="gakudouIchijiHoiku">一時保育</label>
+                        <input type="checkbox" id="gakudouIchijiHoiku" class="filtercb">
+                        <label for="gakudouYakan">夜間</label>
+                        <input type="checkbox" id="gakudouYakan" class="filtercb">
+                        <label for="gakudouKyujitu">休日</label>
+                        <input type="checkbox" id="gakudouKyujitu" class="filtercb">
+                        <label for="gakudouEncho">延長保育</label>
+                        <input type="checkbox" id="gakudouEncho" class="filtercb">
                     </fieldset>
 
                     <div style="padding:1px"></div>
