@@ -1,24 +1,29 @@
 /**
- * コンストラクタ
- *
- * @param ol.Map map OpenLayers3 map object
+ * Papamamap :
+ *   コンストラクタであり、index.jsの$('#mainPage').onでnewされる
+ * 
+ * @property {object}         map ol.Map
+ * @property {Array.<number>} viewCenter マップの初期中心座標
+ * @property {number}         centerLatOffsetPixel 緯度表示位置の調整用オフセット
  *
  */
-window.Papamamap = function() {
-    this.map = null;
+window.Papamamap = function(init_center_coords, mapServer) {
+    this.map;
+    this.popup;
+    this.viewCenter = init_center_coords;
     this.centerLatOffsetPixel = 75;
-    this.viewCenter = [];
+    this.generate(mapServer);
 };
 
 /**
  * マップを作成して保持する
  *
- * @param  {[type]} mapServerListItem [description]
- * @return {[type]}                   [description]
+ * @param  {object} mapServerListItem マップサーバのオブジェクト
  */
 Papamamap.prototype.generate = function(mapServerListItem)
 {
     this.map = new ol.Map({
+        target: 'map', // index.htmlの#map
         layers: [
             new ol.layer.Tile({
                 opacity: 1.0,
@@ -81,7 +86,6 @@ Papamamap.prototype.generate = function(mapServerListItem)
                  visible: true
             }),
         ],
-        target: 'map',
         view: new ol.View({
             center: ol.proj.transform(this.viewCenter, 'EPSG:4326', 'EPSG:3857'),
             zoom: 13,
@@ -98,30 +102,23 @@ Papamamap.prototype.generate = function(mapServerListItem)
     });
 };
 
-/**
- * レイヤー名を取得する
- * @param  {[type]} cbName [description]
- * @return {[type]}        [description]
- */
-Papamamap.prototype.getLayerName = function(name)
+// 指定した名称のレイヤーの表示・非表示を切り替える
+Papamamap.prototype.switchLayer = function(layerName, visible)
 {
-    return 'layer' + name;
-};
-
-/**
- * 指定した名称のレイヤーの表示・非表示を切り替える
- * @param  {[type]} layerName [description]
- * @param  {[type]} visible   [description]
- * @return {[type]}           [description]
- */
-Papamamap.prototype.switchLayer = function(layerName, visible) {
     // layerNameはcheckboxのid属性から取得しているため先頭の"cb"を取り除く
     var _layerName = this.getLayerName(layerName.substr(2));
+
     this.map.getLayers().forEach(function(layer) {
         if (layer.get('name') == _layerName) {
             layer.setVisible(visible);
         }
     });
+};
+
+// レイヤー名を取得する
+Papamamap.prototype.getLayerName = function(name)
+{
+    return 'layer' + name.slice(0,1).toUpperCase() + name.slice(1);
 };
 
 /**
@@ -130,9 +127,9 @@ Papamamap.prototype.switchLayer = function(layerName, visible) {
  * 座標参照系が変換済みの値を使うには false,
  * 変換前の値を使うには true を指定
  */
-Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
-{
-    // グローバル変数 map から view を取得する
+Papamamap.prototype.animatedMove = function(lon, lat, isTransform) {
+
+    // map から view を取得する
     view = this.map.getView();
     var pan = ol.animation.pan({
         duration: 850,
@@ -154,101 +151,28 @@ Papamamap.prototype.animatedMove = function(lon, lat, isTransform)
 };
 
 
-/**
- * 指定したgeojsonデータを元に公立認可・私立認可・小規模等・横浜保育室・認可外・幼稚園レイヤーを描写する
- *    ※上記以外に描写レイヤーを追加する時は、下の this.map.removeLayer(this.map.getLayers().item(4)); も追加レイヤーの数だけ追加してください！
- *
- * @param {[type]} facilitiesData [description]
- */
+// facilityObjの施設分のレイヤーを追加する
 Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
 {
-    if(this.map.getLayers().getLength() >= 4) {
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
-        this.map.removeLayer(this.map.getLayers().item(4));
+    // Papamamap.prototype.generate()のnew ol.Map()の
+    // 初期化で追加したレイヤー以外は削除する。
+    while (this.map.getLayers().getLength() > 4) {
         this.map.removeLayer(this.map.getLayers().item(4));
     }
 
-    // 幼稚園
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerKindergarten',
-            style: kindergartenStyleFunction
-        })
-    );
-    // 認可外
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerNinkagai',
-            style: ninkagaiStyleFunction
-        })
-    );
-    // 私立認可
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerPriNinka',
-            style: priNinkaStyleFunction
-        })
-    );
-    // 公立認可
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerPubNinka',
-            style: pubNinkaStyleFunction
-        })
-    );
-    // 横浜保育室
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerYhoiku',
-            style: yhoikuStyleFunction
-        })
-    );
-    // 小規模・事業所内保育事業
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerJigyosho',
-            style: jigyoshoStyleFunction
-        })
-    );
-    // 障害児通所支援事業
-    this.map.addLayer(
-        new ol.layer.Vector({
-            source: new ol.source.GeoJSON({
-                projection: 'EPSG:3857',
-                object: facilitiesData
-            }),
-            name: 'layerDisability',
-            style: disabilityStyleFunction
-        })
-    );
+    Object.keys(facilityObj).reverse().forEach(function(elem){
+        this.map.addLayer(
+            new ol.layer.Vector({
+                source: new ol.source.GeoJSON({
+                    projection: 'EPSG:3857',
+                    object: facilitiesData
+                }),
+                name: Papamamap.prototype.getLayerName(elem),
+                style: StyleFunctionFactory(facilityObj[elem].type)
+                // style: window[elem+'StyleFunction']
+            })
+        );
+    });
 };
 
 /**
@@ -280,21 +204,17 @@ Papamamap.prototype.loadNurseryFacilitiesJson = function(successFunc)
 Papamamap.prototype.changeMapServer = function(mapServerListItem, opacity)
 {
     this.map.removeLayer(this.map.getLayers().item(0));
-    source_type = mapServerListItem.source_type;
-    var layer = null;
-    switch(source_type) {
-        case 'image':
-            layer = new ol.layer.Image({
-                opacity: opacity,
-                source: mapServerListItem.source
-            });
-            break;
-        default:
-            layer = new ol.layer.Tile({
-                opacity: opacity,
-                source: mapServerListItem.source
-            });
-            break;
+    var layer;
+    if(mapServerListItem.source_type === 'image') {
+        layer = new ol.layer.Image({
+            opacity: opacity,
+            source: mapServerListItem.source
+        });
+    } else {
+        layer = new ol.layer.Tile({
+            opacity: opacity,
+            source: mapServerListItem.source
+        });
     }
     this.map.getLayers().insertAt(0, layer);
 };
@@ -306,7 +226,7 @@ Papamamap.prototype.changeMapServer = function(mapServerListItem, opacity)
  */
 Papamamap.prototype.getLayer = function(layerName)
 {
-    result = null;
+    var result;
     this.map.getLayers().forEach(function(layer) {
         if (layer.get('name') == layerName) {
             result = layer;
@@ -326,38 +246,33 @@ Papamamap.prototype.moveToSelectItem = function(mapServerListItem)
 {
     if(mapServerListItem.coordinates !== undefined) {
         // 区の境界線に合わせて画面表示
-        components = [];
-        for(var i=0; i<mapServerListItem.coordinates.length; i++) {
-            coord = mapServerListItem.coordinates[i];
-            pt2coo = ol.proj.transform(coord, 'EPSG:4326', 'EPSG:3857');
-            components.push(pt2coo);
-        }
-        components = [components];
+        var components = mapServerListItem.coordinates.map(function(elem){
+            ol.proj.transform(elem, 'EPSG:4326', 'EPSG:3857');
+        });
 
-        view = this.map.getView();
-        polygon = new ol.geom.Polygon(components);
-        size =  this.map.getSize();
+        var polygon = new ol.geom.Polygon([components]);
+        var size =  this.map.getSize();
+        var view = this.map.getView();
+
         var pan = ol.animation.pan({
             duration: 850,
             source: view.getCenter()
         });
         this.map.beforeRender(pan);
 
-        feature = new ol.Feature({
+        var feature = new ol.Feature({
             name: mapServerListItem.name,
             geometry: polygon
         });
-        layer = this.getLayer(this.getLayerName("Circle"));
-        source = layer.getSource();
+        // if文でtrueは呼ばれることはないようで、以下のコードが問題ないか未確認
+        var source = this.getLayer(this.getLayerName("Circle")).getSource()
         source.clear();
         source.addFeature(feature);
 
         view.fitGeometry(
             polygon,
             size,
-            {
-                constrainResolution: false
-            }
+            {constrainResolution: false}
         );
     } else {
         // 選択座標に移動
@@ -378,13 +293,13 @@ Papamamap.prototype.getPopupTitle = function(feature)
 {
     // タイトル部
     var title = '';
-    var type = feature.get('種別') ? feature.get('種別') : feature.get('Type');
+    var type = feature.get('Type');
     title  = '[' + type + '] ';
-    var owner = feature.get('設置') ? feature.get('設置') : feature.get('Ownership');
+    var owner = feature.get('Ownership');
     if(!isUndefined(owner)) {
         title += ' [' + owner +']';
     }
-    var name = feature.get('名称') ? feature.get('名称') : feature.get('Name');
+    var name = feature.get('Name');
     title += name;
     url = feature.get('url');
     if(!isUndefined(url)) {
@@ -400,193 +315,153 @@ Papamamap.prototype.getPopupTitle = function(feature)
  */
 Papamamap.prototype.getPopupContent = function(feature)
 {
-    var type = feature.get('Type');
-    var content = '';
-    content = '<table><tbody>';
-    var open  = feature.get('開園時間') ? feature.get('開園時間') : feature.get('Open');
-    var close = feature.get('終園時間') ? feature.get('終園時間') : feature.get('Close');
+    var contentFactory = {
+        content: '<table><tbody>',
+        addContent: function(rowSet){
+            this.content += '<tr>';
+            this.content += `<th>${rowSet.th}</th>`;
+            this.content += `<td>${rowSet.td}</td>`;
+            this.content += '</tr>';
+        },
+        completeContent: function(){
+            this.content += '</tbody></table>';
+            return this.content;
+        }
+    };
+
+    var open  = feature.get('Open');
+    var close = feature.get('Close');
     if (!isUndefined(open) && !isUndefined(close)) {
-        content += '<tr>';
-        content += '<th>時間</th>';
-        content += '<td>';
-        content += open + '〜' + close;
-        content += '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '時間',
+            td: open + '〜' + close
+        });
     }
-    var memo = feature.get('備考') ? feature.get('備考') : feature.get('Memo');
+
+    var memo = feature.get('Memo');
     if (!isUndefined(memo)) {
-        content += '<tr>';
-        content += '<th></th>';
-        content += '<td>' + memo + '</td>';
-        content += '</tr>';
-    }
-    var temp    = feature.get('一時') ? feature.get('一時') : feature.get('Temp');
-    var holiday = feature.get('休日') ? feature.get('休日') : feature.get('Holiday');
-    var night   = feature.get('夜間') ? feature.get('夜間') : feature.get('Night');
-    var h24     = feature.get('H24') ? feature.get('H24') : feature.get('H24');
-    var extra   = feature.get('延長保育') ? feature.get('延長保育') : feature.get('Extra');
-    var founded = feature.get('設立年度');
-    var pre   = feature.get('プレ幼稚園');
-    var bus = feature.get('園バス');
-    var meal   = feature.get('給食');
-    var disability = feature.get('児童発達支援');
-    var d_degree   = feature.get('重心（児童発達）');
-    var after = feature.get('放課後デイ');
-    var a_degree   = feature.get('重心（放課後デイ）');
+        contentFactory.addContent({
+            th: '',
+            td: memo
+        });
+    }    
 
-    if( !isUndefined(temp) || !isUndefined(holiday) || !isUndefined(night) || !isUndefined(h24) || !isUndefined(extra) || !isUndefined(founded) || !isUndefined(pre) || !isUndefined(bus) || !isUndefined(meal) || !isUndefined(disability) || !isUndefined(d_degree) || !isUndefined(after) || !isUndefined(a_degree)) {
-        content += '<tr>';
-        content += '<th></th>';
-        content += '<td>';
-        if (formatNull(temp) !== null) {
-            content += '一時保育 ';
-        }
-        if (formatNull(holiday) !== null) {
-            content += '休日保育 ';
-        }
-        if (formatNull(night) !== null) {
-            content += '夜間保育 ';
-        }
-        if (formatNull(h24) !== null) {
-            content += '24時間 ';
-        }
-        if (formatNull(extra) !== null) {
-            content += '延長保育 ';
-        }
-        if (formatNull(founded) !== null) {
-            content += '設立年度 ';
-        }
-        if (formatNull(pre) !== null) {
-            content += 'プレ幼稚園 ';
-        }
-        if (formatNull(bus) !== null) {
-            content += '園バス ';
-        }
-        if (formatNull(meal) !== null) {
-            content += '給食 ';
-        }
-        if (formatNull(disability) !== null) {
-            content += '児童発達支援';
-        }
-        if (formatNull(d_degree) !== null) {
-            content += '(' + d_degree +') ';
-        } else {content += ' ';}
-        if (formatNull(after) !== null) {
-            content += '放課後デイ';
-        }
-        if (formatNull(a_degree) !== null) {
-            content += '(' + a_degree +') ';
-        } else {content += ' ';}
-        content += '</td>';
-        content += '</tr>';
+    // ヘッダー非使用のコンテンツ
+    var items = "";
+    [
+        temp    = feature.get('Temp') ? '一時保育 ' : "",
+        holiday = feature.get('Holiday') ? '休日保育 ' : "",
+        night   = feature.get('Night') ? '夜間保育 ' : "",
+        h24     = feature.get('H24') ? '24時間 ' : "",
+        extra   = feature.get('Extra') ? '延長保育 ' : "",
+        disability = feature.get('児童発達支援') ? '児童発達支援 ' : "",
+        d_degree   = feature.get('重心（児童発達）') ? `(${feature.get('重心（児童発達）')})` : "",
+        after = feature.get('放課後デイ') ? '放課後デイ ' : "",
+        a_degree   = feature.get('重心（放課後デイ）') ? `(${feature.get('重心（放課後デイ）')})` : ""
+    ].forEach(function(elem){
+        items += elem ? elem : "";
+    });
+    if (items !== "") {
+        contentFactory.addContent({
+            th: '',
+            td: items
+        });
     }
 
-    // var type = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-    // if(type == "私立認可保育所") {
-    //     content += '<tr>';
-    //     content += '<th>欠員</th>';
-    //     content += '<td>';
-    //     var vacancy = feature.get('Vacancy') ? feature.get('Vacancy') : feature.get('Vacancy');
-    //     if (!isUndefined(vacancy)) {
-    //         content += '<a href="http://www.city.yokohama.lg.jp/kohoku/sabisu/hoiku/" target="_blank">空き情報</a>';
-    //     }
-    //     var vacancyDate = feature.get('VacancyDate');
-    //     if (!isUndefined(vacancyDate)) {
-    //         content += " (" + vacancyDate + ")";
-    //     }
-    //     content += '</td>';
-    //     content += '</tr>';
-    // }
-    var ageS = feature.get('開始年齢') ? feature.get('開始年齢') : feature.get('AgeS');
-    var ageE = feature.get('終了年齢') ? feature.get('終了年齢') : feature.get('AgeE');
+    var ageS = feature.get('AgeS');
+    var ageE = feature.get('AgeE');
     if (!isUndefined(ageS) && !isUndefined(ageE)) {
-        content += '<tr>';
-        content += '<th>年齢</th>';
-        content += '<td>' + ageS + '〜' + ageE + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '年齢',
+            td: ageS + '〜' + ageE
+        });
     }
-    var full = feature.get('定員') ? feature.get('定員') : feature.get('Full');
+
+    var full = feature.get('Full');
     if (!isUndefined(full)) {
-        content += '<tr>';
-        content += '<th>定員</th>';
-        content += '<td>' + full + '人</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '定員',
+            td: full
+        });
     }
-    var tel = feature.get('TEL') ? feature.get('TEL') : feature.get('TEL');
+
+    var tel = feature.get('TEL');
     if (!isUndefined(tel)) {
-        content += '<tr>';
-        content += '<th>TEL</th>';
-        content += '<td>' + tel + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: 'TEL',
+            td: tel
+        });
     }
-    var fax = feature.get('FAX') ? feature.get('FAX') : feature.get('FAX');
+
+    var fax = feature.get('FAX');
     if (!isUndefined(fax)) {
-        content += '<tr>';
-        content += '<th>FAX</th>';
-        content += '<td>' + fax + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: 'FAX',
+            td: fax
+        });
     }
-    var add1 = feature.get('住所１') ? feature.get('住所１') : feature.get('Add1');
-    var add2 = feature.get('住所２') ? feature.get('住所２') : feature.get('Add2');
-    if (!isUndefined(add1) || !isUndefined(add2)) {
-        content += '<tr>';
-        content += '<th>住所</th>';
-        content += '<td>' + add1 + add2 +'</td>';
-        content += '</tr>';
+
+    var add = feature.get('Add1') + feature.get('Add2');
+    if (!isUndefined(add)) {
+        contentFactory.addContent({
+            th: '住所',
+            td: add
+        });
     }
-    var owner = feature.get('設置者') ? feature.get('設置者') : feature.get('Owner');
+
+    var owner = feature.get('Owner');
     if (!isUndefined(owner)) {
-        content += '<tr>';
-        content += '<th>設置者</th>';
-        content += '<td>' + owner + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '設置者',
+            td: owner
+        });
     }
-    var foundation = feature.get('設立年度') ? feature.get('設立年度') : feature.get('Foundation');
+
+    var foundation = feature.get('設立年度');
     if (!isUndefined(foundation)) {
-        var foundation_year = foundation.substring(0, 4);
-        var current_date = new Date();
-        var diffday = compareDate(current_date.getFullYear(), current_date.getMonth()+1, current_date.getDate(), foundation.substring(0, 4), foundation.substring(4, 5), foundation.substring(5, 6));
-        if(diffday <= 365*2){
-            content += '<tr>';
-            content += '<th>設立年度</th>';
-            content += '<td>' + foundation_year + "年新設" + '</td>';
-            if(diffday < 0){
-                content += '<td>' + "予定" + '</td>';
-            }
-            content += '</tr>';
-        }
+        contentFactory.addContent({
+            th: '設立年度',
+            td: foundation
+        });
+        // var foundation_year = foundation.substring(0, 4);
+        // var current_date = new Date();
+        // var diffday = compareDate(current_date.getFullYear(), current_date.getMonth()+1, current_date.getDate(), foundation.substring(0, 4), foundation.substring(4, 5), foundation.substring(5, 6));
+        // if(diffday <= 365*2){
+        //     content += '<tr>';
+        //     content += '<th>設立年度</th>';
+        //     content += '<td>' + foundation_year + "年新設" + '</td>';
+        //     if(diffday < 0){
+        //         content += '<td>' + "予定" + '</td>';
+        //     }
+        //     content += '</tr>';
+        // }
     }
-    var pre = feature.get('プレ幼稚園') ? feature.get('プレ幼稚園') : feature.get('Pre');
+
+    var pre = feature.get('プレ幼稚園');
     if (!isUndefined(pre)) {
-        content += '<tr>';
-        content += '<th>プレ幼稚園</th>';
-        if(pre == "Y"){
-            content += '<td>' + "あり" + '</td>';
-        }else{
-            content += '<td>' + "なし" + '</td>';
-        }
-        content += '</tr>';
+        contentFactory.addContent({
+            th: 'プレ幼稚園',
+            td: (pre === "Y") ? "あり" : "なし" 
+        });
     }
-    var bus = feature.get('園バス') ? feature.get('園バス') : feature.get('Bus');
+
+    var bus = feature.get('園バス');
     if (!isUndefined(bus)) {
-        content += '<tr>';
-        content += '<th>園バス</th>';
-        if(bus == "Y"){
-            content += '<td>' + "あり" + '</td>';
-        }else{
-            content += '<td>' + "なし" + '</td>';
-        }
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '園バス',
+            td: (bus === "Y") ? "あり" : "なし" 
+        });
     }
-    var lunch = feature.get('給食') ? feature.get('給食') : feature.get('Lunch');
+
+    var lunch = feature.get('給食');
     if (!isUndefined(lunch)) {
-        content += '<tr>';
-        content += '<th>給食</th>';
-        content += '<td>' + lunch + '</td>';
-        content += '</tr>';
+        contentFactory.addContent({
+            th: '給食',
+            td: lunch
+        });
     }
-    content += '</tbody></table>';
-    return content;
+
+    return contentFactory.completeContent();
 };
 
 /**
@@ -597,11 +472,8 @@ Papamamap.prototype.getPopupContent = function(feature)
 * @return {[type]}
 **/
 function formatNull(param){
-  if(param == null || param == undefined || param ==""){
-    return null;
-  } else {
-    return param;
-  }
+  return (param == null || param == undefined || param =="")
+  ? null : param;
 }
 
 /**
@@ -611,11 +483,8 @@ function formatNull(param){
 * @return {[type]}
 **/
 function isUndefined(param){
-  if(param == null || param == undefined || param ==""){
-    return true;
-  } else {
-    return false;
-  }
+  return (param == null || param == undefined || param =="")
+  ? true : false;
 }
 
 /* 日付の差を求める関数*/
@@ -636,9 +505,9 @@ function compareDate(year1, month1, day1, year2, month2, day2) {
  */
 Papamamap.prototype.clearCenterCircle = function()
 {
-    var layer = this.getLayer(this.getLayerName("Circle"));
-    var source = layer.getSource();
-    source.clear();
+    this.getLayer(this.getLayerName("Circle"))
+        .getSource()
+        .clear()
 };
 
 /**
@@ -650,29 +519,21 @@ Papamamap.prototype.clearCenterCircle = function()
  */
 Papamamap.prototype.drawCenterCircle = function(radius, moveToPixel)
 {
-    if(moveToPixel === undefined || moveToPixel === null) {
-        moveToPixel = 0;
-    }
-    if(radius === "") {
-        radius = 500;
-    }
+
+    moveToPixel　= moveToPixel || 0;
+    radius = Math.floor((radius || 500)); // 選択した半径の同心円を描く
 
     // 円を消す
     this.clearCenterCircle();
 
-    view  = this.map.getView();
-    coordinate = view.getCenter();
+    var coordinate = this.map.getView().getCenter();
     if(moveToPixel > 0) {
         var pixel = map.getPixelFromCoordinate(coordinate);
         pixel[1] = pixel[1] + moveToPixel;
         coordinate = map.getCoordinateFromPixel(pixel);
     }
-    // circleFeatures = drawConcentricCircle(coord, radius);
 
-    // 選択した半径の同心円を描く
-    radius = Math.floor(radius);
-
-    circleFeatures = [];
+    
     // 中心部の円を描く
     var sphere = new ol.Sphere(6378137); // ol.Sphere.WGS84 ol.js には含まれてない
     coordinate = ol.proj.transform(coordinate, 'EPSG:3857', 'EPSG:4326');
@@ -683,28 +544,27 @@ Papamamap.prototype.drawCenterCircle = function(radius, moveToPixel)
     circleFeature = new ol.Feature({
         geometry: geoCircle
     });
-    circleFeatures.push(circleFeature);
+    this.getLayer(this.getLayerName("Circle"))
+        .getSource()
+        .addFeatures([circleFeature]);
 
     // 大きい円に合わせて extent を設定
-    extent = geoCircle.getExtent();
-    view   = this.map.getView();
-    sizes  = this.map.getSize();
-    size   = (sizes[0] < sizes[1]) ? sizes[0] : sizes[1];
-    view.fitExtent(extent, [size, size]);
+    var extent = geoCircle.getExtent();
+    var sizes  = this.map.getSize();
+    var size   = (sizes[0] < sizes[1]) ? sizes[0] : sizes[1];
+    this.map.getView().fitExtent(
+        extent,
+        [size, size]
+    );
 
     // 円の内部に施設が含まれるかチェック
-    _features = nurseryFacilities.features.filter(function(item,idx){
-        coordinate = ol.proj.transform(item.geometry.coordinates, 'EPSG:4326', 'EPSG:3857');
+    var _features = nurseryFacilities.features.filter(function(item,idx){
+        var coordinate = ol.proj.transform(item.geometry.coordinates, 'EPSG:4326', 'EPSG:3857');
         if(ol.extent.containsCoordinate(extent, coordinate))
             return true;
         });
-    for(var i=0; i < _features.length; i++) {
-        console.log(_features[i].properties['名称']);
-    }
+    _features.forEach(function(elem){
+        console.log(_features[i].properties['Name']);
+    });
     console.log(_features);
-
-    var layer  = this.getLayer(this.getLayerName("Circle"));
-    var source = layer.getSource();
-    source.addFeatures(circleFeatures);
-    return;
 };

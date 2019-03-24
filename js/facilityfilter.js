@@ -8,16 +8,13 @@ window.FacilityFilter = function () {};
  * @param  {[type]} checkObj          [description]
  * @return {[type]}                   [description]
  */
-FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurseryFacilities, checkObj)
+FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (filterSet, nurseryFacilities)
 {
-  	'use strict';
-
-    // 絞り込み適用後のすべての施設を格納するGeoJSONを準備
-    var newGeoJson = {
-        "type": "FeatureCollection",
-        "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-        "features":[]
-    };
+    'use strict';
+    
+    var conditions = filterSet.conditions;
+    var checkObj = filterSet.checkObj;
+    var nameKeyword = filterSet.nameKeyword;
 
     // 施設名ごとにフィルターをかけるコールバックを返す
     var filterFunc = function (prop, name) {
@@ -31,25 +28,25 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurs
               .map(function(elem){
                 var hour = Number(elem.slice(0, elem.indexOf(":")));
                 var min = Number(elem.slice(-2));
-                //終園時間が24時過ぎの場合翌日扱い
-                hour = (prop === "Close" && hour <= 12) ? hour += 24 : hour;
+                hour = (prop === "Close" && hour <= 12) ? hour += 24 : hour;   //終園時間が24時過ぎの場合翌日扱い
                 return hour*60 + min;
               });
-              // 開園終園時間が入力されていない施設はfalseを返す
-              if(!result[1]) return false;
+
+              if(!result[1]) return false;  // 開園終園時間が入力されていない施設はfalseを返す
               return (prop === "Close") ? (result[0] <= result[1]) : (result[0] >= result[1]);
           };
     };
 
-    // 各施設の検索元データを取得
-    var featureObj = {};
-    featureObj.pubNinka = nurseryFacilities.features.filter(filterFunc("Type", "公立認可保育所"));
-    featureObj.priNinka = nurseryFacilities.features.filter(filterFunc("Type", "私立認可保育所"));
-    featureObj.ninkagai = nurseryFacilities.features.filter(filterFunc("Type", "認可外保育施設"));
-    featureObj.yhoiku = nurseryFacilities.features.filter(filterFunc("Type", "横浜保育室"));
-    featureObj.kindergarten = nurseryFacilities.features.filter(filterFunc("Type", "幼稚園"));
-    featureObj.jigyosho = nurseryFacilities.features.filter(filterFunc("Type", "小規模・事業所内保育事業"));
-    featureObj.disability = nurseryFacilities.features.filter(filterFunc("Type", "障害児通所支援事業"));
+    var featureObj = {};  // 各施設の検索元データを取得
+    var ffunc = !nameKeyword ? filterFunc  // 施設名キーワードの入力によって分岐
+    : function (prop, name) { 
+        return function (item) { 
+          return item.properties["Name"].indexOf(nameKeyword) >= 0 && item.properties[prop] == name; 
+        };
+      } 
+    Object.keys(facilityObj).forEach(function(elem){
+      featureObj[elem] = nurseryFacilities.features.filter(ffunc("Type", facilityObj[elem].type));
+    });
 
     // Google Analyticsイベントトラッキングの値を普遍値として作成
     var gaEventVal = Object.freeze({
@@ -107,7 +104,15 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurs
       disabilityIchijiHoiku: 2**45,
       disabilityYakan:       2**46,
       disabilityKyujitu:     2**47,
-      disabilityEncho:       2**48
+      disabilityEncho:       2**48,
+
+      gakudouOpenTime:   2**49,
+      gakudouCloseTime:  2**50,
+      gakudouH24:        2**51,
+      gakudouIchijiHoiku: 2**52,
+      gakudouYakan:       2**53,
+      gakudouKyujitu:     2**54,
+      gakudouEncho:       2**55
     });
 
     // DOM上のid属性に使われる文字列とGeoJSONの対応するプロパティのマッピング
@@ -122,32 +127,39 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (conditions, nurs
     };
 
     // オブジェクトconditions(抽出済みのid)の数だけイテレーション priNinkaOpenTimeなど
-    Object.keys(conditions).forEach(function(item){
-      // 施設のイテレーション priNinkaなど
-      Object.keys(checkObj).forEach(function(facility){
-          if (item.indexOf(facility) === 0) {
-            checkObj[facility] = true;
-            // 絞り込み条件のイテレーション OpenTimeなど
-            Object.keys(funcObj).forEach(function(func){
-              if (item.indexOf(func) > 0) {
-                // 開園終園時間とその他の条件で渡すコールバックが異なるため判定
-                if (func === "OpenTime" || func === "CloseTime") {
-                  featureObj[facility] = featureObj[facility].filter(filterTimeFunc(funcObj[func], conditions[item]));
-                } else {
-                  featureObj[facility] = featureObj[facility].filter(filterFunc(funcObj[func], conditions[item]));
+    if(Object.keys(conditions).length) {
+      Object.keys(conditions).forEach(function(item){
+        Object.keys(checkObj).forEach(function(facility){  // 施設のイテレーション priNinkaなど
+            if (item.indexOf(facility) === 0) {
+              checkObj[facility] = true;
+              Object.keys(funcObj).forEach(function(func){ // 絞り込み条件のイテレーション OpenTimeなど
+                if (item.indexOf(func) > 0) {
+                  // 開園終園時間とその他の条件で渡すコールバックが異なるため判定
+                  if (func === "OpenTime" || func === "CloseTime") {
+                    featureObj[facility] = featureObj[facility].filter(filterTimeFunc(funcObj[func], conditions[item]));
+                  } else {
+                    featureObj[facility] = featureObj[facility].filter(filterFunc(funcObj[func], conditions[item]));
+                  }
                 }
-              }
-            });
-          }
+              });
+            }
+        });
+        filterSet.ga_label += gaEventVal[item];  // Google Analyticsイベントトラッキングの値の生成(アキュムレーション)
       });
-      // Google Analyticsイベントトラッキングの値の生成(アキュムレーション)
-      checkObj.filterPattern += gaEventVal[item];
-    });
+    } else {  // 施設名キーワードに該当するレイヤーをtrue
+      Object.keys(checkObj).forEach(function(facility){
+        if(featureObj[facility].length) checkObj[facility] = true;
+      });
+    }
 
-    // 戻り値の作成
+    var features = [];     // 戻り値の作成
     Object.keys(featureObj).forEach(function(facility){
-        Array.prototype.push.apply(newGeoJson.features, featureObj[facility]);
+        Array.prototype.push.apply(features, featureObj[facility]);
     });
 
-    return newGeoJson;
+    return {               // 絞り込み適用後のすべての施設を格納するGeoJSON
+          "type": "FeatureCollection",
+          "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+          "features": features
+      };
 };

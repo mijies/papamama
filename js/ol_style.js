@@ -1,153 +1,24 @@
-/**
- * 保育所背景リスト
- * @type {Object}
- */
-var featureStyleList = {
-	'default': { color: 'rgba(153, 153, 153, 1)', img: 'image/018.png'},
-	'認可外保育施設': { color: '#0362A0', img: 'image/019.png'},
-	'幼稚園': { color: '#FF5C24', img: 'image/029.png'},
-	'私立認可保育所': { color: '#6EE100', img: 'image/018.png'},
-	'公立認可保育所': { color: '#44AA00', img: 'image/018.png'},
-	'横浜保育室': { color: '#0488EE', img: 'image/018.png'},
-	'小規模・事業所内保育事業': { color: '#6DBA9C', img: 'image/018.png'},
-	'障害児通所支援事業': { color: '#f78cb7', img: 'image/029.png'}
-};
 
-/**
- * 私立認可保育所向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var priNinkaStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "私立認可保育所") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
+// 各施設のスタイル設定関数を返すクロージャ
+function StyleFunctionFactory(type) {
+	return function(feature, resolution){
+		if (feature.get('Type') !== type) return [];
+		return nurseryStyleFunction(
+			feature,
+			resolution,
+			featureStyleList[type]
+		);	
 	}
-	return style;
-};
-
-/**
- * 公立認可保育所向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var pubNinkaStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "公立認可保育所") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
-	}
-	return style;
-};
-
-/**
- * 認可外保育所向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var ninkagaiStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "認可外保育施設") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
-	}
-	return style;
-};
-
-/**
- * 幼稚園向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var kindergartenStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "幼稚園") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
-	}
-	return style;
-};
-
-/**
- * 横浜保育室向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var yhoikuStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "横浜保育室") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
-	}
-	return style;
-};
-
-/**
- * 小規模・事業所内保育事業向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var jigyoshoStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "小規模・事業所内保育事業") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
-	}
-	return style;
-};
-
-/**
- * 障害児通所支援事業向けスタイル
- * @param  {[type]} feature    [description]
- * @param  {[type]} resolution [description]
- * @return {[type]}            [description]
- */
-var disabilityStyleFunction = function(feature, resolution)
-{
-	var facilityTypeName = feature.get('種別') ? feature.get('種別') : feature.get('Type');
-	var style = [];
-	if(facilityTypeName === "障害児通所支援事業") {
-		featureStyle = featureStyleList[facilityTypeName];
-		style        = nurseryStyleFunction(feature, resolution, featureStyle);
-	}
-	return style;
-};
+}
 
 /**
  * 保育施設共通のスタイル定義
- * @param  {[type]} feature      [description]
- * @param  {[type]} resolution   [description]
- * @param  {[type]} featureStyle [description]
- * @return {[type]}              [description]
+ * @param  {object}         feature      施設のGeoJSON構造のobject
+ * @param  {number}         resolution   施設のLabel文字列を表示するか判断の解像度(Zoom in/out)
+ * @param  {Array.<object>} featureStyle 施設の種別ごとのスタイル(画像と色)
+ * @return {Array.<object>}                      ol.style.Styleの配列
  */
-var nurseryStyleFunction = function(feature, resolution, featureStyle) {
-	var radius = 15;
-	var background = new ol.style.Circle({
-		radius: radius,
-		fill: new ol.style.Fill({
-			color: featureStyle.color
-		}),
-		stroke: new ol.style.Stroke({color: 'white', width: 3})
-	});
+function nurseryStyleFunction(feature, resolution, featureStyle) {
 	var image = new ol.style.Icon({
 		anchor: [0.5, 0.5],
 		anchorXUnits: 'fraction',
@@ -155,15 +26,20 @@ var nurseryStyleFunction = function(feature, resolution, featureStyle) {
 		src: featureStyle.img,
 		scale: 0.5
 	});
+	
+	var background = new ol.style.Circle({
+		radius: 15,
+		fill: new ol.style.Fill({
+			color: featureStyle.color
+		}),
+		stroke: new ol.style.Stroke({color: 'white', width: 3})
+	});
 
 	resolution = Math.floor(resolution * 1000);
-	var _type = "";
-	var label = feature.get('ラベル') ? feature.get('ラベル') : feature.get('Label');
-	var text = resolution < 10000 ? label : '';
-	var style = [];
-	style = [
+	var text = (resolution < 10000) ? feature.get('Label') : '';
+	var style = [
 		new ol.style.Style({image: background}),
-		new ol.style.Style({image: image}),
+		new ol.style.Style({image: image})
 	];
 
 	if (text !== "") {
@@ -226,10 +102,8 @@ function baseSchoolStyle(mojicolor, fillcolor) {
 		];
 
 		resolution = Math.floor(resolution * 1000);
-		var text = "";
-		if(feature.get('label') !== null) {
-			text = resolution < 12000 ? feature.get('label') : '';
-		}
+		var text = (feature.get('label') !== null) && resolution < 12000
+				　 ? feature.get('label') : '';
 		if (text !== "") {
 			style.push(
 					new ol.style.Style({
@@ -255,20 +129,19 @@ function baseSchoolStyle(mojicolor, fillcolor) {
 // 中学校区スタイル
 var middleSchoolStyleFunction = baseSchoolStyle(
 	'#7379AE', 'rgba(115, 121, 174, 0.1)'
-	);
+);
 
 // 小学校区スタイル
 var elementaryStyleFunction = baseSchoolStyle(
 	'#1BA466', 'rgba(27, 164, 102, 0.1)'
-	);
+);
 
 // 距離計測用同心円の色設定
-var circleStyleFunction = function(feature, resolution) {
+function circleStyleFunction(feature, resolution) {
 	resolution = Math.floor(resolution * 1000);
-	var text = "";
-	if(feature.get('name') !== null) {
-		text = resolution < 100000 ? feature.get('name') : '';
-	}
+	var text = (feature.get('name') !== null) && resolution < 100000 
+			   ? feature.get('name') : '';
+
 	var style = [new ol.style.Style({
 		stroke: new ol.style.Stroke({
 			color: 'rgba(238, 149, 44, 0.30)',
