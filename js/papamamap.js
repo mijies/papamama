@@ -421,7 +421,7 @@ Papamamap.prototype.getPopupContent = function(feature)
     if (!isUndefined(foundation)) {
         contentFactory.addContent({
             th: '設立年度',
-            td: foundation
+            td: foundation + '年'
         });
         // var foundation_year = foundation.substring(0, 4);
         // var current_date = new Date();
