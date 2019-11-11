@@ -252,9 +252,48 @@ $('#mainPage').on('pageshow', function() {
 		evt.stopPropagation();
 	});
 
+	// フィルター適用時
+	var applyFilter = function(filterSet, btn){
+
+		if(Object.keys(filterSet.conditions).length || filterSet.nameKeyword || filterSet.newSchool) {
+			papamamap.addNurseryFacilitiesLayer(
+				FacilityFilter.prototype.getFilteredFeaturesGeoJson(filterSet, nurseryFacilities)
+			);
+			$(btn).css('background-color', '#3388cc');
+
+			// 検索結果の一覧のhtmlを新規タブで表示される。クエリで検索条件を新規Windowへ渡す
+			if (document.getElementById("filteredList").checked) {
+				var urlQuery = '?';
+				urlQuery += 'nameKeyword' + '=' + encodeURI(filterSet.nameKeyword || 'null') + '&';
+				urlQuery += 'newSchool' + '=' + encodeURI(filterSet.newSchool || 'false') + '&';
+				Object.keys(filterSet.conditions).forEach(function(item) {
+					urlQuery += item + '=' + filterSet.conditions[item] + '&';
+				});
+				window.open(
+					'filteredList.html' + urlQuery.slice(0, -1)
+				);
+			}
+
+			updateLayerStatus(filterSet.checkObj); // レイヤー表示状態によって施設の表示を切り替える
+
+		} else {
+			resetFilter();
+		}
+
+		// ga('send', 'event', 'カテゴリ', 'アクション', 'ラベル', '値', { nonInteraction: 真偽値 } )
+		// *nonInteraction: trueはイベントが発生しても直帰率に影響せず、falseはイベントの呼び出しで直帰とみなされなくなる
+		ga('send', 'event', 'filter', this.id, filterSet.ga_label) ;
+		// 本イベントを直帰率へ反映させたくない場合は以下を使用すること。
+		// ga('send', 'event', 'nurseryFacilities', 'filter', this.id, checkObj.filterPattern, { nonInteraction: true });
+	}
+
     // 検索フィルターを有効にする
 	$('#filterApply').click(function(evt){
 	'use strict';
+
+		// 新規園ボタンをオフ
+		$('#btnNewSchool').css('background-color', '#f6f6f6');
+		document.getElementById("btnNewSchool").enaled = false;
 
 		// 条件作成処理
 		var filterSet = {
@@ -271,6 +310,9 @@ $('#mainPage').on('pageshow', function() {
 		// 施設名キーワードのテキスト値
 		filterSet.nameKeyword = $('#nameKeyword').val() || "";
 
+		// 新設園の指定
+		if (document.getElementById("newSchool").checked) filterSet.newSchool = true;
+
 		// 検索フィルターのセレクト(filtersbクラス)で選択されたもののみ抽出
 		$('select.filtersb option:selected').each(function(index,item) {
 			if (item.value) filterSet.conditions[item.parentNode.id] = item.value;
@@ -281,46 +323,10 @@ $('#mainPage').on('pageshow', function() {
 			if (item.checked) filterSet.conditions[item .id] = 'Y';
 		});
 
-		// フィルター適用時
-		if(Object.keys(filterSet.conditions).length || filterSet.nameKeyword) {
-			papamamap.addNurseryFacilitiesLayer(
-				FacilityFilter.prototype.getFilteredFeaturesGeoJson(filterSet, nurseryFacilities)
-			);
-			$('#btnFilter').css('background-color', '#3388cc');
-
-			// 検索結果の一覧のhtmlを新規タブで表示される。クエリで検索条件を新規Windowへ渡す
-			if (document.getElementById("filteredList").checked) {
-				var urlQuery = '?';
-				urlQuery += 'nameKeyword' + '=' + encodeURI(filterSet.nameKeyword || 'null') + '&';
-				Object.keys(filterSet.conditions).forEach(function(item) {
-					urlQuery += item + '=' + filterSet.conditions[item] + '&';
-				});
-				window.open(
-					'filteredList.html' + urlQuery.slice(0, -1)
-				);
-			}
-
-		} else {
-
-			papamamap.addNurseryFacilitiesLayer(nurseryFacilities);
-			$('#btnFilter').css('background-color', '#f6f6f6');
-
-			Object.keys(facilityObj).forEach(function(item) {
-				filterSet.checkObj[item] = true;
-			});
-		}
-
-		// ga('send', 'event', 'カテゴリ', 'アクション', 'ラベル', '値', { nonInteraction: 真偽値 } )
- 		// *nonInteraction: trueはイベントが発生しても直帰率に影響せず、falseはイベントの呼び出しで直帰とみなされなくなる
- 		ga('send', 'event', 'filter', this.id, filterSet.ga_label) ;
- 		// 本イベントを直帰率へ反映させたくない場合は以下を使用すること。
- 		// ga('send', 'event', 'nurseryFacilities', 'filter', this.id, checkObj.filterPattern, { nonInteraction: true });
-
-		updateLayerStatus(filterSet.checkObj); // レイヤー表示状態によって施設の表示を切り替える
+		applyFilter(filterSet, '#btnFilter'); // フィルター適用時
 	});
 
-	// 絞込条件のリセット
-	$('#filterReset').click(function(evt){
+	var resetFilter = function(evt){
 
 		// テキストボックスをリセット
 		$('#nameKeyword').val("");
@@ -339,13 +345,57 @@ $('#mainPage').on('pageshow', function() {
 		// 施設情報をリセット
 		papamamap.addNurseryFacilitiesLayer(nurseryFacilities);
 		$('#btnFilter').css('background-color', '#f6f6f6');
+		$('#btnNewSchool').css('background-color', '#f6f6f6');
+		document.getElementById("btnNewSchool").enaled = false;
+		$('#newSchool').prop('checked', false).checkboxradio('refresh');
 
 		// すべての施設を表示する
 		var checkObj = {};
 		Object.keys(facilityObj).forEach(function(elem){
 			checkObj[elem] = true;
 		});
+		
 		updateLayerStatus(checkObj);
+	}
+
+	// 絞込条件のリセット
+	$('#filterReset').click(resetFilter);
+
+	// 新設園の絞り込みボタンのイベント定義
+	document.getElementById("btnNewSchool").addEventListener('click', function(evt){
+		'use strict';
+
+		// 条件作成処理
+		var filterSet = {
+			nameKeyword: "",
+			conditions: {},
+			checkObj: {},	// 表示レイヤーの真偽値を取得
+			ga_label: 0 	// Google Analyticsのイベントトラッキングで送信するデフォルト値
+		};
+
+		// トグル
+		var elem = document.getElementById("btnNewSchool");
+		if (elem.enaled) {
+			resetFilter(); // 検索ボタン側も含め全てリセット
+
+		} else {
+			resetFilter(); // 検索ボタン側も含め全てリセット
+			elem.enaled = true;
+			// filterSet.nameKeyword = "新設・仮称"; // 施設名キーワードのテキスト値
+			filterSet.newSchool = true;
+
+			// 検索フィルターのセレクト(filtersbクラス)で選択されたもののみ抽出
+			$('select.filtersb option:selected').each(function(index,item) {
+				filterSet.conditions[item.parentNode.id] = item.value;
+			});
+
+			// 検索フィルターのチェックボックス(filtercbクラス)で選択されたもののみ抽出
+			$('.filtercb').each(function(index,item ) {
+				filterSet.conditions[item .id] = 'Y';
+			});
+
+			applyFilter(filterSet, '#btnNewSchool'); // フィルター適用時
+		}
 	});
 
 	/**

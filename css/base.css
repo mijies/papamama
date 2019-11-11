@@ -52,7 +52,7 @@
 }
 
 #nav1-btn, #lblPubNinka, #lblPriNinka, #lblNinkagai, #lblYhoiku, #lblJigyosho, #lblKindergarten, #lblDisability, #lblGakudou, #lblElementarySchool, #lblMiddleSchool,
-#btnFilter, #changeBaseMap-button, #moveTo-button, #changeCircleRadius-button, #btnHelp {
+#btnFilter, #btnNewSchool, #changeBaseMap-button, #moveTo-button, #changeCircleRadius-button, #btnHelp {
 	border: groove white;
 	border-radius: 5px 5px 5px 5px / 5px 5px 5px 5px;
 }
@@ -135,6 +135,13 @@
 }
 #lblGakudou:hover {
 	color: lightblue;
+}
+
+#divNameKeyword {
+	float: left;
+}
+#divNewSchool {
+	float: right;
 }
 
 #lblElementarySchool.ui-checkbox-on {

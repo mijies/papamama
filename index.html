@@ -74,7 +74,12 @@
                        検索
                     </a>
 
-                    <select id="changeBaseMap" >
+                    <a id="btnNewSchool" 
+                        class="ui-btn ui-corner-all ui-btn-a ui-icon-filter ui-btn-icon-right ui-icon-check">
+                        新設園
+                    </a>
+
+                    <select id="changeBaseMap">
                         <option>背景</option>
                     </select>
 
@@ -112,13 +117,26 @@
             <form>
                 <div style="padding:3px 10px;">
                     <h4><b>保育施設 絞り込み</b></h4>
-                    
-                    <legend>施設名キーワード</legend>
-                    <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
-                        <label for="nameKeyword">施設名キーワード</label>
-                        <input type="text" id="nameKeyword">
-                    </fieldset>
 
+                    <div>
+                        <div id=divNewSchool>
+                            <legend>　</legend>
+                            <div style="padding:3px;"></div>
+                            <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                                <label for="newSchool">新設園</label>
+                                <input type="checkbox" id="newSchool">
+                            </fieldset>
+                        </div>
+                        <div id=divNameKeyword>
+                            <legend>施設名キーワード</legend>
+                            <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
+                                <label for="nameKeyword">施設名キーワード</label>
+                                <input type="text" id="nameKeyword">
+                            </fieldset>
+                        </div>
+                    </div>
+
+                    <div style="padding:40px;"></div>
                     <legend>公立認可保育園</legend>
                     <fieldset data-role="controlgroup" data-type="horizontal" data-mini="true">
                         <label for="pubNinkaOpenTime" class="select">開園</label>

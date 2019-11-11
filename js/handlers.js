@@ -104,7 +104,7 @@ function toggleNavbar() {
     Object.keys(elem[0].children).forEach(function(item){
         elem[0].children[item].style.width = "";
     });
-    ["btnFilter", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(evt) {
+    ["btnFilter", "btnNewSchool", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(evt) {
         document.getElementById(evt).style.width = "";
     });
 
@@ -129,7 +129,7 @@ function toggleNavbar() {
         Object.keys(elem[0].children).forEach(function(i){
             elem[0].children[i].style.width =  (window.innerWidth / 3 * 1) + "px";
         });
-        ["btnFilter", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(e) {
+        ["btnFilter", "btnNewSchool", "changeBaseMap-button", "moveTo-button", "changeCircleRadius-button", "btnHelp"].forEach(function(e) {
             document.getElementById(e).style.width = (window.innerWidth / 3 * 1) + "px";
         });
 

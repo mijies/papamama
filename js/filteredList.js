@@ -25,9 +25,11 @@ if(location.search) {
          });
      });
   var nameKeyword = decodeURI(conditions.nameKeyword);
-  nameKeyword = nameKeyword !== "null" ? nameKeyword : ""
+  nameKeyword = nameKeyword !== "null" ? nameKeyword : "";
+  var newSchool = decodeURI(conditions.newSchool) !== "false" ? true : false;
   delete conditions.nameKeyword;
-
+  delete conditions.newSchool;
+  
   var checkObj = {};
   Object.keys(facilityObj).forEach(function(elem){
     checkObj[elem] = false;
@@ -133,9 +135,9 @@ function createFilteredList () {
 
   var filter = new FacilityFilter();
   ga_label = 0; // 定義のみで使用されない
-  console.log(nameKeyword);
+  
   var features = filter.getFilteredFeaturesGeoJson( // checkObjを参照渡しで表示レイヤーを取得する
-        {nameKeyword, conditions, checkObj, ga_label},
+        {newSchool, nameKeyword, conditions, checkObj, ga_label},
         nurseryFacilities
   ).features;
 
@@ -182,6 +184,7 @@ function createFilterText() {
   filterCondition.appendChild(document.createElement('br'));
 
   if(nameKeyword) textObj = Object.assign({"施設名キーワード": nameKeyword}, textObj);
+  if(newSchool) textObj = Object.assign({"新規園": "適用"}, textObj);
   Object.keys(textObj).forEach(function(type){    // " - 施設名 (条件)"のテキスト生成
     var elem_span = document.createElement('span');
     elem_span.textContent = ' - ' + type + ' (' + textObj[type] + ')';

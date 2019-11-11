@@ -15,10 +15,42 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (filterSet, nurse
     var conditions = filterSet.conditions;
     var checkObj = filterSet.checkObj;
     var nameKeyword = filterSet.nameKeyword;
+    var newSchool = filterSet.newSchool;
 
-    // 施設名ごとにフィルターをかけるコールバックを返す
+    // 設立年度の比較年を取得する
+    // var compareYear = (function() {
+    //     var date = new Date();
+    //     date.setMonth(date.getMonth() + 6)
+    //     return date.getFullYear();
+    // })();
+
+    // 指定プロパティごとにフィルターをかけるコールバックを返す
     var filterFunc = function (prop, name) {
           return function (item) { return item.properties[prop] == name; };
+    };
+    // 施設名キーワードと指定プロパティごとにフィルターをかけるコールバックを返す
+    var keywordFilterFunc = function (prop, name) {
+          return function (item) { 
+            return item.properties["Name"].indexOf(nameKeyword) >= 0
+            && item.properties[prop] == name;
+          }; 
+    };
+    // 設立年度と指定プロパティごとにフィルターをかけるコールバックを返す
+    var FoundedFilterFunc = function (prop, name) {
+          return function (item) { 
+            // return item.properties["設立年度"] >= compareYear
+            return item.properties["Name"].indexOf("新設・仮称") >= 0
+            && item.properties[prop] == name;
+          }; 
+    };
+    // 設立年度と施設名キーワードと指定プロパティごとにフィルターをかけるコールバックを返す
+    var FoundedKeywordFilterFunc = function (prop, name) {
+          return function (item) { 
+            // return item.properties["設立年度"] >= compareYear
+            return item.properties["Name"].indexOf("新設・仮称") >= 0
+            && item.properties["Name"].indexOf(nameKeyword) >= 0
+            && item.properties[prop] == name;
+          }; 
     };
 
     // 開園終演時間でフィルターをかけるコールバックを返す
@@ -38,14 +70,19 @@ FacilityFilter.prototype.getFilteredFeaturesGeoJson = function (filterSet, nurse
     };
 
     var featureObj = {};  // 各施設の検索元データを取得
-    var ffunc = !nameKeyword ? filterFunc  // 施設名キーワードの入力によって分岐
-    : function (prop, name) { 
-        return function (item) { 
-          return item.properties["Name"].indexOf(nameKeyword) >= 0 && item.properties[prop] == name; 
-        };
-      } 
+    var initFilterFunc;   // 施設を跨いだ初回検索の分岐
+    if (nameKeyword && newSchool) {
+      initFilterFunc = FoundedKeywordFilterFunc;
+    } else if (!nameKeyword && newSchool) {
+      initFilterFunc = FoundedFilterFunc;
+    } else if (nameKeyword && !newSchool) {
+      initFilterFunc = keywordFilterFunc;
+    } else {
+      initFilterFunc = filterFunc;
+    }
+
     Object.keys(facilityObj).forEach(function(elem){
-      featureObj[elem] = nurseryFacilities.features.filter(ffunc("Type", facilityObj[elem].type));
+      featureObj[elem] = nurseryFacilities.features.filter(initFilterFunc("Type", facilityObj[elem].type));
     });
 
     // Google Analyticsイベントトラッキングの値を普遍値として作成
