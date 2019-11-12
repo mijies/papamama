@@ -373,6 +373,10 @@ $('#mainPage').on('pageshow', function() {
 			ga_label: 0 	// Google Analyticsのイベントトラッキングで送信するデフォルト値
 		};
 
+		if (document.getElementById("filteredList").checked) {
+			$('#filteredList').prop('checked', false).checkboxradio('refresh');
+		}
+
 		// トグル
 		var elem = document.getElementById("btnNewSchool");
 		if (elem.enaled) {
