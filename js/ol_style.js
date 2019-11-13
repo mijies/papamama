@@ -28,7 +28,7 @@ function nurseryStyleFunction(feature, resolution, featureStyle) {
 	});
 	
 	var background = new ol.style.Circle({
-		radius: 15,
+		radius: 12,
 		fill: new ol.style.Fill({
 			color: featureStyle.color
 		}),
