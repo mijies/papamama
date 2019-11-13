@@ -32,7 +32,7 @@ function nurseryStyleFunction(feature, resolution, featureStyle) {
 		fill: new ol.style.Fill({
 			color: featureStyle.color
 		}),
-		stroke: new ol.style.Stroke({color: 'white', width: 3})
+		stroke: new ol.style.Stroke({color: 'white', width: 1})
 	});
 
 	resolution = Math.floor(resolution * 1000);
