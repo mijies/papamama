@@ -39,13 +39,15 @@ var mapServerList = {
 	'osm': {
 		label: "交通",
 		source_type: "osm",
-		source: new ol.source.OSM({
-			url: "http://{a-c}.tile.thunderforest.com/transport/{z}/{x}/{y}.png",
-			attributions: [
-				ol.source.OSM.DATA_ATTRIBUTION,
-				new ol.Attribution({html: "Tiles courtesy of <a href='http://www.thunderforest.com/' target='_blank'>Andy Allan</a>"})
-			]
-		})
+		source: new ol.source.OSM()
+		// source: new ol.source.OSM({
+			// url: "http://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+			// projection: "EPSG:4326"
+			// attributions: [
+			// ol.source.OSM.TILE_ATTRIBUTION,
+			// 	ol.source.OSM.DATA_ATTRIBUTION
+			// ]
+		// })
 	},
 	'bing-aerial': {
 		label: "写真",
