@@ -96,8 +96,7 @@ Papamamap.prototype.generate = function(mapServerListItem)
              new ol.control.Attribution({collapsible: true}),
              new ol.control.ScaleLine({}), // 距離ライン定義
              new ol.control.Zoom({}),
-             new ol.control.ZoomSlider({}),
-             new MoveCurrentLocationControl()
+             new ol.control.ZoomSlider({})
         ]
     });
 };
@@ -120,36 +119,6 @@ Papamamap.prototype.getLayerName = function(name)
 {
     return 'layer' + name.slice(0,1).toUpperCase() + name.slice(1);
 };
-
-/**
- * 指定した座標にアニメーションしながら移動する
- * isTransform:
- * 座標参照系が変換済みの値を使うには false,
- * 変換前の値を使うには true を指定
- */
-Papamamap.prototype.animatedMove = function(lon, lat, isTransform) {
-
-    // map から view を取得する
-    view = this.map.getView();
-    var pan = ol.animation.pan({
-        duration: 850,
-        source: view.getCenter()
-    });
-    this.map.beforeRender(pan);
-    var coordinate = [lon, lat];
-    if(isTransform) {
-        // 座標参照系を変換する
-        coordinate = ol.proj.transform([lon, lat], 'EPSG:4326', 'EPSG:3857');
-    } else {
-        // 座標系を変換しない
-        // モバイルでポップアップ上部が隠れないように中心をずらす
-        var pixel = this.map.getPixelFromCoordinate(coordinate);
-        pixel[1] = pixel[1] - this.centerLatOffsetPixel;
-        coordinate = this.map.getCoordinateFromPixel(pixel);
-    }
-    view.setCenter(coordinate);
-};
-
 
 // facilityObjの施設分のレイヤーを追加する
 Papamamap.prototype.addNurseryFacilitiesLayer = function(facilitiesData)
