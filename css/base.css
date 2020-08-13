@@ -1,4 +1,9 @@
 /* CSS Document */
+
+body { /* disable scroll to be transferred to browser page*/
+    overscroll-behavior: contain;
+}
+
 .ui-content {
 	margin: 0;
 	padding: 0 !important;
