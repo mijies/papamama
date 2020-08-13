@@ -143,7 +143,6 @@ $('#mainPage').on('pageshow', function() {
 				$('#popup').show();
 			}
 		}
-		papamamap.animatedMove(coord[0], coord[1], false);
 	});
 
 	// 中心座標変更セレクトボックス操作イベント定義
@@ -186,24 +185,6 @@ $('#mainPage').on('pageshow', function() {
 			layer = map.getLayers().item(idx + 1);
 			layer.setVisible($(this).prop('checked'));
 		});
-	});
-
-	// 現在地に移動するボタンのイベント定義
-	$('#moveCurrentLocation').click(function(evt){
-
-		MoveCurrentLocationControl.prototype.getCurrentPosition(
-			function(pos) {
-				var coordinate = ol.proj.transform(
-					[pos.coords.longitude, pos.coords.latitude], 
-					'EPSG:4326', 'EPSG:3857'
-				);
-				map.getView().setCenter(coordinate);
-				drawMarker(coordinate, "現在地");
-			},
-			function(err) {
-				alert('位置情報が取得できませんでした。');
-			}
-		);
 	});
 
 	// 半径セレクトボックスのイベント定義
